@@ -1,7 +1,11 @@
-import React from "react";
+import { BugReportForm } from "@/components/ui/formExample";
 
 const SigninForm = () => {
-  return <div>SigninInForm</div>;
+  return (
+    <div>
+      <BugReportForm />
+    </div>
+  );
 };
 
 export default SigninForm;
