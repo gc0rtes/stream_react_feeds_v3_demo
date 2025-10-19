@@ -1,9 +1,9 @@
-import { BugReportForm } from "@/components/ui/formExample";
+import { SignInForm } from "@/components/SignInForm";
 
 const SigninForm = () => {
   return (
-    <div>
-      <BugReportForm />
+    <div className="w-full max-w-md px-4">
+      <SignInForm />
     </div>
   );
 };
