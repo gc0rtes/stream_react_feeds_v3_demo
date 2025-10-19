@@ -1,9 +1,6 @@
-"use client";
-
-import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
+
 import * as z from "zod";
 
 import { Link } from "react-router-dom";
@@ -27,9 +24,11 @@ import { Input } from "@/components/ui/input";
 
 import { SignUpValidation } from "@/lib/validation";
 import Loader from "./shared/Loader";
+import { createUserAccount } from "@/lib/appwrite/api";
+import { useState } from "react";
 
 export function SignUpForm() {
-  const isLoading = false;
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof SignUpValidation>>({
     resolver: zodResolver(SignUpValidation),
@@ -42,20 +41,9 @@ export function SignUpForm() {
   });
 
   function onSubmit(data: z.infer<typeof SignUpValidation>) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className="bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      position: "bottom-right",
-      classNames: {
-        content: "flex flex-col gap-2",
-      },
-      style: {
-        "--border-radius": "calc(var(--radius)  + 4px)",
-      } as React.CSSProperties,
-    });
+    setIsLoading(true);
+    createUserAccount(data);
+    setIsLoading(false);
   }
 
   return (
