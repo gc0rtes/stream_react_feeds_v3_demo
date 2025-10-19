@@ -29,7 +29,7 @@ import { SignUpValidation } from "@/lib/validation";
 import Loader from "./shared/Loader";
 
 export function SignUpForm() {
-  const isLoading = true;
+  const isLoading = false;
 
   const form = useForm<z.infer<typeof SignUpValidation>>({
     resolver: zodResolver(SignUpValidation),
@@ -179,7 +179,7 @@ export function SignUpForm() {
               )}
             </Button>
           </Field>
-          <p className="text-sm ">
+          <p className="text-small-regular text-light-2 text-center">
             Already have an account?{" "}
             <Link className="text-primary-500" to="/sign-in">
               Sign in
