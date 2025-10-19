@@ -40,9 +40,11 @@ export function SignUpForm() {
     },
   });
 
-  function onSubmit(data: z.infer<typeof SignUpValidation>) {
+  async function onSubmit(data: z.infer<typeof SignUpValidation>) {
     setIsLoading(true);
-    createUserAccount(data);
+    const newUser = await createUserAccount(data);
+    console.log("newUser", newUser);
+
     setIsLoading(false);
   }
 
