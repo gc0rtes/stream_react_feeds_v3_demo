@@ -26,8 +26,11 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { SignUpValidation } from "@/lib/validation";
+import Loader from "./shared/Loader";
 
 export function SignUpForm() {
+  const isLoading = true;
+
   const form = useForm<z.infer<typeof SignUpValidation>>({
     resolver: zodResolver(SignUpValidation),
     defaultValues: {
@@ -167,7 +170,13 @@ export function SignUpForm() {
               form="form-rhf-demo"
               className="w-full bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2"
             >
-              Sign Up
+              {isLoading ? (
+                <div className="flex-center gap-2">
+                  <Loader /> Loading ...
+                </div>
+              ) : (
+                "Sign Up"
+              )}
             </Button>
           </Field>
           <p className="text-sm ">
