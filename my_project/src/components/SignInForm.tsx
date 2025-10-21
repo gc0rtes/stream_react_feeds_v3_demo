@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { SignInValidation } from "@/lib/validation";
+import { appWritelogin } from "@/lib/appwrite/api";
 
 export function SignInForm() {
   const form = useForm<z.infer<typeof SignInValidation>>({
@@ -32,8 +33,9 @@ export function SignInForm() {
     },
   });
 
-  function onSubmit(data: z.infer<typeof SignInValidation>) {
-    console.log(data);
+  async function onSubmit(data: z.infer<typeof SignInValidation>) {
+    const response = await appWritelogin(data.email, data.password);
+    console.log(response);
   }
 
   return (

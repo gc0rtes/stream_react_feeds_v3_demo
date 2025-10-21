@@ -42,6 +42,7 @@ export function SignUpForm() {
 
   async function onSubmit(data: z.infer<typeof SignUpValidation>) {
     setIsLoading(true);
+    console.log("data", data);
     const newUser = await createUserAccount(data);
     console.log("newUser", newUser);
 
@@ -68,13 +69,14 @@ export function SignUpForm() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-rhf-demo-title">Name</FieldLabel>
+                    <FieldLabel htmlFor="form-rhf-demo-name">Name</FieldLabel>
                     <Input
                       {...field}
                       type="text"
-                      id="form-rhf-demo-title"
+                      id="form-rhf-demo-name"
                       aria-invalid={fieldState.invalid}
                       placeholder=""
+                      autoComplete="name"
                       className="bg-dark-4 border-none"
                     />
                     {fieldState.invalid && (
@@ -88,15 +90,16 @@ export function SignUpForm() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-rhf-demo-title">
+                    <FieldLabel htmlFor="form-rhf-demo-username">
                       Username
                     </FieldLabel>
                     <Input
                       {...field}
                       type="text"
-                      id="form-rhf-demo-title"
+                      id="form-rhf-demo-username"
                       aria-invalid={fieldState.invalid}
                       placeholder=""
+                      autoComplete="username"
                       className="bg-dark-4 border-none"
                     />
                     {fieldState.invalid && (
@@ -111,11 +114,11 @@ export function SignUpForm() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-rhf-demo-title">Email</FieldLabel>
+                    <FieldLabel htmlFor="form-rhf-demo-email">Email</FieldLabel>
                     <Input
                       {...field}
                       type="email"
-                      id="form-rhf-demo-title"
+                      id="form-rhf-demo-email"
                       aria-invalid={fieldState.invalid}
                       placeholder=""
                       autoComplete="email"
