@@ -6,14 +6,20 @@ export const appwriteConfig = {
   databaseId: import.meta.env.VITE_APPWRITE_DATABASE_ID,
 };
 
-//createa an client instance
+//create a client instance
 export const client = new Client();
 
-client.setProject(appwriteConfig.projectId);
-client.setEndpoint(appwriteConfig.endpoint);
+client
+  .setProject(appwriteConfig.projectId)
+  .setEndpoint(appwriteConfig.endpoint);
+
+// Log client configuration for debugging
+console.log("🔧 Appwrite Client configured:", {
+  projectId: appwriteConfig.projectId,
+  endpoint: appwriteConfig.endpoint,
+});
 
 export const account = new Account(client);
 export const tablesDB = new TablesDB(client);
-// export const databases = new Databases(client);
 export const storage = new Storage(client);
 export const avatars = new Avatars(client);

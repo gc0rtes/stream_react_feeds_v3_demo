@@ -1,11 +1,11 @@
 import type { INewUser } from "@/types";
 import { account, avatars, tablesDB, appwriteConfig } from "./config";
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
 
-//Create User Account
+//Create User Account and create a user row in the users database
 export async function createUserAccount(user: INewUser) {
   try {
-    //createa new account at Appwrite
+    //createa new auth account at Appwrite
     const newAccount = await account.create({
       userId: ID.unique(),
       email: user.email,
@@ -19,7 +19,7 @@ export async function createUserAccount(user: INewUser) {
     });
     console.log("avatarUrl", avatarUrl);
 
-    //create the user in the database
+    //write to database
     const newUser = await saveUserToDB({
       userId: `user_${newAccount.$id}`,
       username: user.username,
@@ -56,12 +56,67 @@ export async function saveUserToDB(user: {
   }
 }
 
-// Create a new section
-export async function appWritelogin(email: string, password: string) {
-  return await account.createEmailPasswordSession({
-    email,
-    password,
-  });
+// Create a new session
+export async function signInAccount(email: string, password: string) {
+  try {
+    // First, try to delete any existing session
+    try {
+      await account.deleteSession({
+        sessionId: "current",
+      });
+      console.log("🗑️ Deleted existing session");
+    } catch (error) {
+      // Ignore error if no session exists
+      console.log("ℹ️ No existing session to delete");
+    }
+
+    // Now create a new session
+    const session = await account.createEmailPasswordSession({
+      email,
+      password,
+    });
+
+    console.log("✅ Session created successfully:", session);
+
+    // Check if session is saved to localStorage
+    const cookieFallback = localStorage.getItem("cookieFallback");
+    console.log("📦 cookieFallback after session creation:", cookieFallback);
+
+    return session;
+  } catch (error) {
+    console.error("❌ Failed to create session:", error);
+    throw error;
+  }
+}
+
+//Get current user
+export async function getCurrentUser() {
+  try {
+    //Get current account from authentication
+    const currentAccount = await account.get();
+    if (!currentAccount) throw new Error("No account found");
+
+    //Get current user from database
+    const databaseId = appwriteConfig.databaseId;
+    const tableId = "users";
+    const query = [Query.equal("userId", `user_${currentAccount.$id}`)];
+
+    // Fetch rows from the table
+    const currentUser = await tablesDB.listRows({
+      databaseId,
+      tableId,
+      queries: query,
+    });
+
+    if (!currentUser || currentUser.rows.length === 0) {
+      throw new Error("User not found in database");
+    }
+
+    return currentUser.rows[0];
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
 }
 
 //Delete a session - logout

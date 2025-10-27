@@ -3,7 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import * as z from "zod";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,15 +21,32 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 import { SignUpValidation } from "@/lib/validation";
 import Loader from "./shared/Loader";
-import { createUserAccount } from "@/lib/appwrite/api";
-import { useState } from "react";
+
+import {
+  useCreateUserAccount,
+  useSignInAccount,
+} from "@/lib/react-query/queriesAndMutations";
+
+import { useUserContext } from "@/context/AuthContext";
 
 export function SignUpForm() {
-  const [isLoading, setIsLoading] = useState(false);
+  const { checkAuthUser } = useUserContext();
 
+  //Create user account in the database
+  const { mutateAsync: createUserAccount, isPending: isCreatingUser } =
+    useCreateUserAccount();
+
+  //Sign in account in the database
+  const { mutateAsync: signInAccount } = useSignInAccount();
+
+  //Instance of useNavigate
+  const navigate = useNavigate();
+
+  //Form logic from shadcn/ui
   const form = useForm<z.infer<typeof SignUpValidation>>({
     resolver: zodResolver(SignUpValidation),
     defaultValues: {
@@ -41,12 +58,41 @@ export function SignUpForm() {
   });
 
   async function onSubmit(data: z.infer<typeof SignUpValidation>) {
-    setIsLoading(true);
-    console.log("data", data);
-    const newUser = await createUserAccount(data);
-    console.log("newUser", newUser);
+    console.log("📝 Starting signup process with data:", data);
 
-    setIsLoading(false);
+    const newUser = await createUserAccount(data);
+    if (!newUser) {
+      return toast("Sign up failed, please try again.");
+    }
+    console.log("✅ User account created:", newUser);
+
+    const session = await signInAccount({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (!session) {
+      return toast("Sign in failed, please try again.");
+    }
+    console.log("✅ Session created, checking localStorage...");
+    console.log(
+      "📦 cookieFallback after signin:",
+      localStorage.getItem("cookieFallback")
+    );
+
+    const isLoggedIn = await checkAuthUser();
+    console.log("🔐 Auth check result:", isLoggedIn);
+
+    //if user is logged in, redirect to home page
+    if (isLoggedIn) {
+      form.reset();
+      console.log("🎉 Login successful, navigating to home");
+      navigate("/");
+      return toast.success("Account created successfully");
+    } else {
+      console.log("❌ Login failed despite successful session creation");
+      return toast.error("Something went wrong");
+    }
   }
 
   return (
@@ -163,7 +209,7 @@ export function SignUpForm() {
               form="form-rhf-demo"
               className="w-full bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2"
             >
-              {isLoading ? (
+              {isCreatingUser ? (
                 <div className="flex-center gap-2">
                   <Loader /> Loading ...
                 </div>
