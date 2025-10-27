@@ -21,7 +21,7 @@ export async function createUserAccount(user: INewUser) {
 
     //write to database
     const newUser = await saveUserToDB({
-      userId: `user_${newAccount.$id}`,
+      userId: newAccount.$id,
       username: user.username,
       email: user.email,
       name: user.name,
@@ -100,7 +100,7 @@ export async function getCurrentUser() {
     //Get current user from database
     const databaseId = appwriteConfig.databaseId;
     const tableId = "users";
-    const query = [Query.equal("userId", `user_${currentAccount.$id}`)];
+    const query = [Query.equal("userId", currentAccount.$id)];
 
     // Fetch rows from the table
     const currentUser = await tablesDB.listRows({
@@ -122,13 +122,7 @@ export async function getCurrentUser() {
 
 //Delete a session - logout
 export async function signOutAccount() {
-  try {
-    const response = await account.deleteSession({
-      sessionId: "current", //Use the string 'current' to delete the current device session.
-    });
-    console.log("🗑️ Session deleted successfully:", response);
-    return response;
-  } catch (error) {
-    console.log(error);
-  }
+  return await account.deleteSession({
+    sessionId: "current", //Use the string 'current' to delete the current device session.
+  });
 }

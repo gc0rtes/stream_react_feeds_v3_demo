@@ -2,19 +2,26 @@ import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 import { useSignOutAccount } from "@/lib/react-query/queriesAndMutations";
+import { useEffect } from "react";
+import { useUserContext } from "@/context/AuthContext";
 
 const Topbar = () => {
+  const { user } = useUserContext();
+  const userId = user?.id;
   const { mutate: signOut, isSuccess } = useSignOutAccount();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     console.log("Logging out");
     signOut();
-    navigate("/sign-in");
   };
-  if (isSuccess) {
-    navigate("/sign-in");
-  }
+
+  useEffect(() => {
+    if (isSuccess) {
+      navigate(0); //reload the page
+    }
+  }, [isSuccess, navigate]);
+
   return (
     <section className="topbar">
       <div className="flex-between py-4 px-5">
@@ -40,6 +47,13 @@ const Topbar = () => {
               height={20}
             />
           </Button>
+          <Link to={`/profile/${userId}`} className="flex-center gap-3">
+            <img
+              src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
+              alt="profile"
+              className="h-8 w-8 rounded-full"
+            />
+          </Link>
         </div>
       </div>
     </section>
