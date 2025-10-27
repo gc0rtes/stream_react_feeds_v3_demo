@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,11 +20,21 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 import { SignInValidation } from "@/lib/validation";
-// import { appWritelogin } from "@/lib/appwrite/api";
+import { useUserContext } from "@/context/AuthContext";
+import { useSignInAccount } from "@/lib/react-query/queriesAndMutations";
+import { Loader } from "lucide-react";
 
 export function SignInForm() {
+  const { checkAuthUser } = useUserContext();
+
+  const { mutateAsync: signInAccount, isPending: isSigningIn } =
+    useSignInAccount();
+
+  const navigate = useNavigate();
+
   const form = useForm<z.infer<typeof SignInValidation>>({
     resolver: zodResolver(SignInValidation),
     defaultValues: {
@@ -34,10 +44,36 @@ export function SignInForm() {
   });
 
   async function onSubmit(data: z.infer<typeof SignInValidation>) {
-    // const response = await appWritelogin(data.email, data.password);
-    console.log(data);
-  }
+    console.log("📝 Starting signin process with data:", data);
 
+    const session = await signInAccount({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (!session) {
+      return toast("Sign in failed, please try again.");
+    }
+
+    console.log("✅ Session created, checking localStorage...");
+    console.log(
+      "📦 cookieFallback after signin:",
+      localStorage.getItem("cookieFallback")
+    );
+
+    const isLoggedIn = await checkAuthUser();
+    console.log("🔐 Auth check result:", isLoggedIn);
+
+    //if user is logged in, redirect to home page
+    if (isLoggedIn) {
+      form.reset();
+      console.log("🎉 Login successful, navigating to home");
+      navigate("/");
+    } else {
+      console.log("❌ Sign in failed. Please try again.");
+      return toast.error("Something went wrong");
+    }
+  }
   return (
     <div className="w-full flex flex-col items-center gap-4">
       <img src="/assets/images/logo.svg" alt="logo" />
@@ -107,7 +143,13 @@ export function SignInForm() {
               form="form-rhf-demo"
               className="w-full bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2"
             >
-              Log in
+              {isSigningIn ? (
+                <div className="flex-center gap-2">
+                  <Loader /> Loading ...
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </Field>
           <p className="text-sm ">

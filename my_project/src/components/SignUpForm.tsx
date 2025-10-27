@@ -86,7 +86,7 @@ export function SignUpForm() {
     //if user is logged in, redirect to home page
     if (isLoggedIn) {
       form.reset();
-      console.log("🎉 Login successful, navigating to home");
+      console.log("🎉 Sign up successful, navigating to home");
       navigate("/");
       return toast.success("Account created successfully");
     } else {
