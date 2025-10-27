@@ -1,11 +1,20 @@
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
-import { appWritelogout } from "@/lib/appwrite/api";
+import { useNavigate } from "react-router-dom";
+import { useSignOutAccount } from "@/lib/react-query/queriesAndMutations";
 
 const Topbar = () => {
+  const { mutate: signOut, isSuccess } = useSignOutAccount();
+  const navigate = useNavigate();
+
   const handleLogout = () => {
-    appWritelogout();
+    console.log("Logging out");
+    signOut();
+    navigate("/sign-in");
   };
+  if (isSuccess) {
+    navigate("/sign-in");
+  }
   return (
     <section className="topbar">
       <div className="flex-between py-4 px-5">
@@ -17,7 +26,8 @@ const Topbar = () => {
             height={325}
           />
         </Link>
-        <div>
+
+        <div className="flex gap-4">
           <Button
             variant="ghost"
             className="shad-button_ghost"

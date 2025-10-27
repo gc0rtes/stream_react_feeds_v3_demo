@@ -66,6 +66,7 @@ export async function signInAccount(email: string, password: string) {
       });
       console.log("🗑️ Deleted existing session");
     } catch (error) {
+      console.log(error);
       // Ignore error if no session exists
       console.log("ℹ️ No existing session to delete");
     }
@@ -120,8 +121,14 @@ export async function getCurrentUser() {
 }
 
 //Delete a session - logout
-export async function appWritelogout() {
-  return await account.deleteSession({
-    sessionId: "current", //Use the string 'current' to delete the current device session.
-  });
+export async function signOutAccount() {
+  try {
+    const response = await account.deleteSession({
+      sessionId: "current", //Use the string 'current' to delete the current device session.
+    });
+    console.log("🗑️ Session deleted successfully:", response);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
 }
