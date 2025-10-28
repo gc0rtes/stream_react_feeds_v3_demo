@@ -5,7 +5,7 @@ import { Outlet } from "react-router-dom";
 
 const RootLayout = () => {
   return (
-    <div className="w-full md:flex bg-dark-1 text-light-1">
+    <div className="w-full md:flex ">
       <Topbar />
       <LeftSidebar />
 

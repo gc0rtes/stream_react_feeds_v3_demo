@@ -9,6 +9,7 @@
 @theme {
   /* Colors */
   --color-primary-500: #877eff;
+  /* --color-primary-500: #d9d2e9; */
   --color-primary-600: #5d5fef;
   --color-secondary-500: #ffb620;
   --color-off-white: #d0dfff;
@@ -442,8 +443,5 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
