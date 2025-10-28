@@ -1,28 +1,32 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 import { useSignOutAccount } from "@/lib/react-query/queriesAndMutations";
-import { useEffect } from "react";
-import { useUserContext } from "@/context/AuthContext";
+
+import { useUserContext, INITIAL_USER } from "@/context/AuthContext";
+import { Loader } from "lucide-react";
+
+import { sidebarLinks } from "@/constants";
+import type { INavLink } from "@/types";
 
 const LeftSidebar = () => {
-  const { user } = useUserContext();
-  const userId = user?.id;
-  const { mutate: signOut, isSuccess } = useSignOutAccount();
+  const { user, setIsAuthenticated, setUser, isLoading } = useUserContext();
+  const { pathname } = useLocation();
+  const { mutate: signOut } = useSignOutAccount();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    console.log("Logging out");
+  const handleSignOut = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.preventDefault();
     signOut();
+    setIsAuthenticated(false);
+    setUser(INITIAL_USER);
+    navigate("/sign-in");
   };
 
-  useEffect(() => {
-    if (isSuccess) {
-      navigate(0); //reload the page
-    }
-  }, [isSuccess, navigate]);
   return (
-    <nav className="leftsidebar">
+    <nav className="hidden md:flex px-6 py-10 flex-col justify-between min-w-[270px] bg-dark-2">
       <div className="flex flex-col gap-11">
         <Link to="/" className="flex gap-3 items-center">
           <img
@@ -32,22 +36,57 @@ const LeftSidebar = () => {
             height={36}
           />
         </Link>
-        <Link to={`/profile/${userId}`} className="flex gap-3 items-center">
-          <img
-            src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
-            alt="profile"
-            className="h-14 w-14 rounded-full"
-          />
-          <div className="flex flex-col">
-            <p className="body-bold text-light-1">{user.name}</p>
-            <p className="small-regular text-light-3">@{user.username}</p>
+        {isLoading || !user.email ? (
+          <div className="h-14">
+            <Loader />
           </div>
-        </Link>
+        ) : (
+          <Link to={`/profile/${user.id}`} className="flex gap-3 items-center">
+            <img
+              src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
+              alt="profile"
+              className="h-14 w-14 rounded-full"
+            />
+            <div className="flex flex-col">
+              <p className="body-bold">{user.name}</p>
+              <p className="small-regular text-light-3">@{user.username}</p>
+            </div>
+          </Link>
+        )}
+        <ul className="flex flex-col gap-6 text-light-2">
+          {sidebarLinks.map((link: INavLink) => {
+            const isActive = pathname === link.route;
+
+            return (
+              <li
+                key={link.label}
+                className={`leftsidebar-link group ${
+                  isActive && "bg-primary-500"
+                }`}
+              >
+                <NavLink
+                  to={link.route}
+                  className="flex gap-4 items-center p-4"
+                >
+                  <img
+                    src={link.imgURL}
+                    alt={link.label}
+                    className={`group-hover:invert-white ${
+                      isActive && "invert-white"
+                    }`}
+                  />
+                  {link.label}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
       </div>
+
       <Button
         variant="ghost"
         className="shad-button_ghost"
-        onClick={handleLogout}
+        onClick={handleSignOut}
       >
         <img
           src="/assets/icons/logout.svg"
@@ -55,6 +94,7 @@ const LeftSidebar = () => {
           width={20}
           height={20}
         />
+        <p className="small-medium lg:base-medium text-light-2">Logout</p>
       </Button>
     </nav>
   );
