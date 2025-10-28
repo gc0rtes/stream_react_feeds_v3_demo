@@ -141,7 +141,7 @@ export function SignInForm() {
             <Button
               type="submit"
               form="form-rhf-demo"
-              className="w-full bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2"
+              className="w-full bg-primary-500 hover:bg-primary-500  flex gap-2"
             >
               {isSigningIn ? (
                 <div className="flex-center gap-2">

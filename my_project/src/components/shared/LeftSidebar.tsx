@@ -49,11 +49,11 @@ const LeftSidebar = () => {
             />
             <div className="flex flex-col">
               <p className="body-bold">{user.name}</p>
-              <p className="small-regular text-light-3">@{user.username}</p>
+              <p className="small-regular ">@{user.username}</p>
             </div>
           </Link>
         )}
-        <ul className="flex flex-col gap-6 text-light-2">
+        <ul className="flex flex-col gap-6 ">
           {sidebarLinks.map((link: INavLink) => {
             const isActive = pathname === link.route;
 
@@ -94,7 +94,7 @@ const LeftSidebar = () => {
           width={20}
           height={20}
         />
-        <p className="small-medium lg:base-medium text-light-2">Logout</p>
+        <p className="small-medium lg:base-medium ">Logout</p>
       </Button>
     </nav>
   );

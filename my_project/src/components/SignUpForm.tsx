@@ -207,7 +207,7 @@ export function SignUpForm() {
             <Button
               type="submit"
               form="form-rhf-demo"
-              className="w-full bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2"
+              className="w-full bg-primary-500 hover:bg-primary-500  flex gap-2"
             >
               {isCreatingUser ? (
                 <div className="flex-center gap-2">
@@ -218,7 +218,7 @@ export function SignUpForm() {
               )}
             </Button>
           </Field>
-          <p className="text-small-regular text-light-2 text-center">
+          <p className="text-small-regular  text-center">
             Already have an account?{" "}
             <Link className="text-primary-500" to="/sign-in">
               Sign in
