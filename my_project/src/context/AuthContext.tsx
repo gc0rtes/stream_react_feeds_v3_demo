@@ -1,8 +1,9 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import type { IContextType, IUser } from "@/types";
 import { getCurrentUser } from "@/lib/appwrite/api";
-
+import { getUserToken } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { FeedsClient } from "@stream-io/feeds-client";
 
 export const INITIAL_USER = {
   id: "",
@@ -29,6 +30,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<IUser>(INITIAL_USER);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [feedsClient, setClient] = useState<FeedsClient | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  const connectUser = async (apiKey: string, userId: string | undefined) => {
+    try {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+      const feedsClient = new FeedsClient(apiKey);
+      const tokenProvider = await getUserToken(userId);
+      if (!tokenProvider) {
+        throw new Error("Token not found");
+      }
+      console.log("tokenProvider>>>", tokenProvider);
+
+      await feedsClient.connectUser({ id: userId }, tokenProvider);
+      setClient(feedsClient);
+      console.log("feedsClient>>>", feedsClient);
+      setIsConnected(true);
+      console.log("User connected successfully");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const checkAuthUser = async () => {
     try {
@@ -49,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
 
         setIsAuthenticated(true);
+        connectUser(import.meta.env.VITE_STREAM_FEEDS_API_KEY, userData.id);
         return true;
       }
       return false;
@@ -94,9 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
+    feedsClient,
+    isConnected,
     isAuthenticated,
     isLoading,
     setUser,
+    setClient,
+    setIsConnected,
     setIsAuthenticated,
     checkAuthUser,
   };
