@@ -7,7 +7,14 @@ import { useUserContext, INITIAL_USER } from "@/context/AuthContext";
 import { closeWSFeedsConnection } from "@/lib/stream/api";
 
 const Topbar = () => {
-  const { user, feedsClient, setIsAuthenticated, setUser } = useUserContext();
+  const {
+    user,
+    feedsClient,
+    setIsAuthenticated,
+    setUser,
+    setClient,
+    setIsConnected,
+  } = useUserContext();
   const userId = user?.id;
   const { mutate: signOut } = useSignOutAccount();
   const navigate = useNavigate();
@@ -16,8 +23,10 @@ const Topbar = () => {
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     e.preventDefault();
+    await closeWSFeedsConnection(feedsClient);
+    setClient(null);
+    setIsConnected(false);
     signOut();
-    closeWSFeedsConnection(feedsClient);
     setIsAuthenticated(false);
     setUser(INITIAL_USER);
     navigate("/sign-in");

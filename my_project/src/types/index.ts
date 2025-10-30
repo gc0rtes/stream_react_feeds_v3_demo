@@ -20,7 +20,7 @@ export type IContextType = {
   isAuthenticated: boolean;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   checkAuthUser: () => Promise<boolean>;
-  feedsClient: FeedsClient;
+  feedsClient: FeedsClient | null;
   setClient: React.Dispatch<React.SetStateAction<FeedsClient | null>>;
   isConnected: boolean;
   setIsConnected: React.Dispatch<React.SetStateAction<boolean>>;

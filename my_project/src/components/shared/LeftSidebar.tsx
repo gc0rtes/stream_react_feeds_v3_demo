@@ -11,9 +11,16 @@ import type { INavLink } from "@/types";
 import { closeWSFeedsConnection } from "@/lib/stream/api";
 
 const LeftSidebar = () => {
-  const { user, setIsAuthenticated, setUser, isLoading } = useUserContext();
+  const {
+    user,
+    setIsAuthenticated,
+    setUser,
+    isLoading,
+    feedsClient,
+    setClient,
+    setIsConnected,
+  } = useUserContext();
   const { pathname } = useLocation();
-  const { feedsClient } = useUserContext();
   const { mutate: signOut } = useSignOutAccount();
   const navigate = useNavigate();
 
@@ -22,8 +29,10 @@ const LeftSidebar = () => {
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     e.preventDefault();
+    await closeWSFeedsConnection(feedsClient);
+    setClient(null);
+    setIsConnected(false);
     signOut();
-    closeWSFeedsConnection(feedsClient);
     setIsAuthenticated(false);
     setUser(INITIAL_USER);
     navigate("/sign-in");

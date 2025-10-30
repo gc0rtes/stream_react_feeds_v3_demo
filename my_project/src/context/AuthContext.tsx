@@ -21,6 +21,10 @@ const INITIAL_STATE = {
   setUser: () => {},
   setIsAuthenticated: () => {},
   checkAuthUser: async () => false as boolean,
+  feedsClient: null,
+  setClient: () => {},
+  isConnected: false,
+  setIsConnected: () => {},
 };
 
 const AuthContext = createContext<IContextType>(INITIAL_STATE);

@@ -59,17 +59,17 @@ export async function saveUserToDB(user: {
 // Create a new session
 export async function signInAccount(email: string, password: string) {
   try {
-    // First, try to delete any existing session
-    try {
-      await account.deleteSession({
-        sessionId: "current",
-      });
-      console.log("🗑️ Deleted existing session");
-    } catch (error) {
-      console.log(error);
-      // Ignore error if no session exists
-      console.log("ℹ️ No existing session to delete");
-    }
+    // // First, try to delete any existing session
+    // try {
+    //   await account.deleteSession({
+    //     sessionId: "current",
+    //   });
+    //   console.log("🗑️ Deleted existing session");
+    // } catch (error) {
+    //   console.log(error);
+    //   // Ignore error if no session exists
+    //   console.log("ℹ️ No existing session to delete");
+    // }
 
     // Now create a new session
     const session = await account.createEmailPasswordSession({
