@@ -45,11 +45,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       console.log("tokenProvider>>>", tokenProvider);
 
-      await feedsClient.connectUser({ id: userId }, tokenProvider);
+      const connection = await feedsClient.connectUser(
+        { id: userId },
+        tokenProvider
+      );
+      console.log("connection>>>", connection);
       setClient(feedsClient);
       console.log("feedsClient>>>", feedsClient);
       setIsConnected(true);
       console.log("User connected successfully");
+
+      // Set up event listeners for all WebSocket events
+      feedsClient.on("all", (event) => {
+        console.log("WS event:", event);
+      });
     } catch (error) {
       console.error(error);
     }

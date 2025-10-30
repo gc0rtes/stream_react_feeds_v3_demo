@@ -1,3 +1,5 @@
+import type { FeedsClient } from "@stream-io/feeds-client";
+
 export type INavLink = {
   imgURL: string;
   route: string;
@@ -18,6 +20,10 @@ export type IContextType = {
   isAuthenticated: boolean;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   checkAuthUser: () => Promise<boolean>;
+  feedsClient: FeedsClient;
+  setClient: React.Dispatch<React.SetStateAction<FeedsClient | null>>;
+  isConnected: boolean;
+  setIsConnected: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export type IUser = {

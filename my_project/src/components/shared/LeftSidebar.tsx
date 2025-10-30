@@ -8,18 +8,22 @@ import { Loader } from "lucide-react";
 
 import { sidebarLinks } from "@/constants";
 import type { INavLink } from "@/types";
+import { closeWSFeedsConnection } from "@/lib/stream/api";
 
 const LeftSidebar = () => {
   const { user, setIsAuthenticated, setUser, isLoading } = useUserContext();
   const { pathname } = useLocation();
+  const { feedsClient } = useUserContext();
   const { mutate: signOut } = useSignOutAccount();
   const navigate = useNavigate();
 
+  //Handle sign out
   const handleSignOut = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     e.preventDefault();
     signOut();
+    closeWSFeedsConnection(feedsClient);
     setIsAuthenticated(false);
     setUser(INITIAL_USER);
     navigate("/sign-in");

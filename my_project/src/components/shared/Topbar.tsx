@@ -2,25 +2,26 @@ import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 import { useSignOutAccount } from "@/lib/react-query/queriesAndMutations";
-import { useEffect } from "react";
-import { useUserContext } from "@/context/AuthContext";
+
+import { useUserContext, INITIAL_USER } from "@/context/AuthContext";
+import { closeWSFeedsConnection } from "@/lib/stream/api";
 
 const Topbar = () => {
-  const { user } = useUserContext();
+  const { user, feedsClient, setIsAuthenticated, setUser } = useUserContext();
   const userId = user?.id;
-  const { mutate: signOut, isSuccess } = useSignOutAccount();
+  const { mutate: signOut } = useSignOutAccount();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    console.log("Logging out");
+  const handleSignOut = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.preventDefault();
     signOut();
+    closeWSFeedsConnection(feedsClient);
+    setIsAuthenticated(false);
+    setUser(INITIAL_USER);
+    navigate("/sign-in");
   };
-
-  useEffect(() => {
-    if (isSuccess) {
-      navigate(0); //reload the page
-    }
-  }, [isSuccess, navigate]);
 
   return (
     <section className="topbar">
@@ -38,7 +39,7 @@ const Topbar = () => {
           <Button
             variant="ghost"
             className="shad-button_ghost"
-            onClick={handleLogout}
+            onClick={handleSignOut}
           >
             <img
               src="/assets/icons/logout.svg"
