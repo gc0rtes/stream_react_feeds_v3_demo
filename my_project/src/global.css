@@ -300,37 +300,35 @@
   }
 }
 
-@layer components {
-  /* SHADCN COMPONENTS */
-  /* Form */
-  .shad-form_label {
-    @apply !text-white;
-  }
+/* SHADCN COMPONENTS */
+/* Form */
+@utility shad-form_label {
+  color: white !important;
+}
 
-  .shad-form_message {
-    @apply !text-red;
-  }
+@utility shad-form_message {
+  color: var(--color-red) !important;
+}
 
-  .shad-input {
-    @apply h-12 bg-dark-4 border-none placeholder:text-light-4 focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3;
-  }
+@utility shad-input {
+  @apply h-12 bg-dark-4 border-none placeholder:text-light-4 focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3;
+}
 
-  .shad-textarea {
-    @apply h-36 bg-dark-3 rounded-xl border-none focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3;
-  }
+@utility shad-textarea {
+  @apply h-36 bg-dark-3 rounded-xl border-none focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3;
+}
 
-  /* Button */
-  .shad-button_primary {
-    @apply bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2;
-  }
+/* Button */
+@utility shad-button_primary {
+  @apply bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2;
+}
 
-  .shad-button_dark_4 {
-    @apply h-12 bg-dark-4 px-5 text-light-1 flex gap-2;
-  }
+@utility shad-button_dark_4 {
+  @apply h-12 bg-dark-4 px-5 text-light-1 flex gap-2;
+}
 
-  .shad-button_ghost {
-    @apply flex gap-4 items-center justify-start hover:bg-transparent hover:text-white;
-  }
+@utility shad-button_ghost {
+  @apply flex gap-4 items-center justify-start hover:bg-transparent hover:text-white;
 }
 
 @theme inline {

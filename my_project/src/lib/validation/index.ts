@@ -14,3 +14,10 @@ export const SignInValidation = z.object({
   email: z.string().min(1, "Email is required"),
   password: z.string().max(100, "Password must be at most 100 characters"),
 });
+
+export const CreateMessageValidation = z.object({
+  message: z.string().min(1, "Message is required"),
+  file: z.custom<File[]>().optional(),
+  location: z.string().optional(),
+  tags: z.string().optional(),
+});
