@@ -18,34 +18,40 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 
 import { Controller, useForm } from "react-hook-form";
-import { CreateMessageValidation } from "@/lib/validation";
+import { PostValidation } from "@/lib/validation";
 import FileUploader from "../shared/FileUploader";
 import { Input } from "../ui/input";
 
-const PostForm = () => {
-  const form = useForm<z.infer<typeof CreateMessageValidation>>({
-    resolver: zodResolver(CreateMessageValidation),
+type PostFormProps = {
+  post?: Models.Document; //model from appwrite I need from stream
+  action: "Create" | "Update";
+};
+
+const PostForm = ({ post, action }: PostFormProps) => {
+  const form = useForm<z.infer<typeof PostValidation>>({
+    resolver: zodResolver(PostValidation),
     defaultValues: {
-      message: "",
-      file: "",
-      location: "",
-      tags: "",
+      caption: post ? post?.caption : "",
+      file: [],
+      location: post ? post.location : "",
+      tags: post ? post.tags.join(",") : "",
     },
   });
 
-  const onSubmit = (data: z.infer<typeof CreateMessageValidation>) => {
+  const onSubmit = (data: z.infer<typeof PostValidation>) => {
     console.log(data);
   };
+
   return (
     <form
       id="form-create-post"
-      className="flex flex-col gap-9 w-full max-w-5xl"
+      className="border-2 border-blue-500 flex flex-col gap-9 w-full max-w-3xl"
       onSubmit={form.handleSubmit(onSubmit)}
     >
       <FieldSet>
         <FieldGroup>
           <Controller
-            name="message"
+            name="caption"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field>
@@ -143,17 +149,17 @@ const PostForm = () => {
           />
         </FieldGroup>
       </FieldSet>
-      <div className="flex flex-center gap-4">
+      <div className="flex justify-end gap-4">
         <Button
           type="submit"
-          className="shad-button_primary"
+          className="h-10 px-5 bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2 !important"
           form="form-create-post"
         >
           Submit
         </Button>
         <Button
           type="button"
-          className="shad-button_dark_4"
+          className="h-10 bg-dark-4 px-5 text-light-1 flex gap-2 !important"
           form="form-create-post"
         >
           Cancel

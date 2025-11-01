@@ -3,8 +3,8 @@ import PostForm from "@/components/forms/PostForm";
 const CreatePost = () => {
   return (
     <div className="flex flex-1">
-      <div className="common-container">
-        <div className="flex-start gap-3 w-full max-w-5xl">
+      <div className="border-2 border-red-500 flex flex-col flex-1 items-center gap-10 overflow-scroll py-10 px-5 md:px-8 lg:p-14 custom-scrollbar">
+        <div className="border-2 border-yellow-500 max-w-3xl flex-start gap-3 justify-start w-full">
           <img
             src="/assets/icons/add-post.svg"
             width={36}
