@@ -1,15 +1,14 @@
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
   FieldSeparator,
   FieldSet,
-  FieldTitle,
 } from "@/components/ui/field";
+
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,25 +20,69 @@ import { Controller, useForm } from "react-hook-form";
 import { PostValidation } from "@/lib/validation";
 import FileUploader from "../shared/FileUploader";
 import { Input } from "../ui/input";
+import { AddActivity } from "@/lib/stream/api";
+
+import { useUserContext } from "@/context/AuthContext";
+
+import type { INewPost } from "@/types";
 
 type PostFormProps = {
-  post?: Models.Document; //model from appwrite I need from stream
+  post?: INewPost;
   action: "Create" | "Update";
 };
 
 const PostForm = ({ post, action }: PostFormProps) => {
+  const { feedsClient } = useUserContext();
+  const { user } = useUserContext();
+  const user_id = user?.id;
+
+  const navigate = useNavigate();
+
   const form = useForm<z.infer<typeof PostValidation>>({
     resolver: zodResolver(PostValidation),
     defaultValues: {
-      caption: post ? post?.caption : "",
+      text: post ? post?.text : "",
       file: [],
-      location: post ? post.location : "",
-      tags: post ? post.tags.join(",") : "",
+      custom_location: post ? post.custom_location : "",
+      interest_tags: Array.isArray(post?.interest_tags)
+        ? post.interest_tags.join(",")
+        : post?.interest_tags || "",
     },
   });
 
-  const onSubmit = (data: z.infer<typeof PostValidation>) => {
+  const onSubmit = async (data: z.infer<typeof PostValidation>) => {
     console.log(data);
+
+    // Check if feedsClient and user_id are available
+    if (!feedsClient) {
+      toast.error("Feeds client is not initialized. Please try again.");
+      return;
+    }
+
+    if (!user_id) {
+      toast.error("User ID is not available. Please log in again.");
+      return;
+    }
+
+    try {
+      // ACTION = CREATE
+      //create a new stream post. The feed group and the feed id can change dynamically according to the app architecture
+      await AddActivity(
+        feedsClient,
+        "user",
+        user_id,
+        data.text,
+        data.file,
+        data.custom_location,
+        data.interest_tags
+      );
+
+      toast.success(`${action} post successful!`);
+      navigate("/");
+    } catch (error) {
+      console.error("Error creating post:", error);
+      toast.error(`${action} post failed. Please try again.`);
+    }
   };
 
   return (
@@ -51,7 +94,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
       <FieldSet>
         <FieldGroup>
           <Controller
-            name="caption"
+            name="text"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field>
@@ -87,7 +130,10 @@ const PostForm = ({ post, action }: PostFormProps) => {
                 </FieldLabel>
 
                 {/* Custom File Uploader Component*/}
-                <FileUploader />
+                <FileUploader
+                  fieldChange={field.onChange}
+                  mediaUrls={field.value || []}
+                />
 
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -97,7 +143,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
           />
           <FieldSeparator />
           <Controller
-            name="location"
+            name="custom_location"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field>
@@ -123,7 +169,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
           />
           <FieldSeparator />
           <Controller
-            name="tags"
+            name="interest_tags"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field>

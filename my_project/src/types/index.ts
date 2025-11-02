@@ -34,3 +34,11 @@ export type IUser = {
   imageUrl: string;
   bio: string;
 };
+
+export type INewPost = {
+  userId: string;
+  text: string;
+  file: File[];
+  custom_location?: string;
+  interest_tags?: string;
+};
