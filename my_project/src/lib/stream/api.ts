@@ -1,4 +1,5 @@
 import { FeedsClient } from "@stream-io/feeds-client";
+import type { IUploadedFile } from "@/types";
 
 /**
  * Closes the WebSocket connection for a Stream Feeds client.
@@ -27,7 +28,7 @@ export async function AddActivity(
   feedgroup: string,
   feed_id: string,
   text: string,
-  fileUrls: string[],
+  uploadedFiles: IUploadedFile[],
   custom_location?: string,
   interest_tags?: string
 ) {
@@ -49,12 +50,14 @@ export async function AddActivity(
         .filter((tag) => tag.length > 0)
     : [];
 
-  // Create attachments array from uploaded file URLs
-  const attachments = fileUrls.map((url) => {
-    const isImage = url.match(/\.(jpg|jpeg|png|gif|svg)$/i);
+  // Create attachments array from uploaded files with their types
+  const attachments = uploadedFiles.map((file) => {
     return {
       custom: {},
-      ...(isImage ? { image_url: url } : { asset_url: url }),
+      type: file.type,
+      ...(file.type === "image"
+        ? { image_url: file.url }
+        : { asset_url: file.url }),
     };
   });
 

@@ -3,18 +3,19 @@ import { useDropzone } from "react-dropzone";
 import { isImageFile } from "@stream-io/feeds-client";
 import type { StreamFile } from "@stream-io/feeds-client";
 import { useUserContext } from "@/context/AuthContext";
-import { Button } from "../ui/button";
 import { Loader } from "lucide-react";
+import type { IUploadedFile } from "@/types";
 
 type FileUploaderProps = {
-  fieldChange: (files: string[]) => void;
-  mediaUrls: string[];
+  fieldChange: (files: IUploadedFile[]) => void;
+  mediaUrls: IUploadedFile[];
 };
 
 const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
   const { feedsClient } = useUserContext();
   const [files, setFiles] = useState<File[]>([]);
-  const [fileUrls, setFileUrls] = useState<string[]>(mediaUrls);
+  const [uploadedFiles, setUploadedFiles] =
+    useState<IUploadedFile[]>(mediaUrls);
   const [isUploading, setIsUploading] = useState(false);
 
   const onDrop = useCallback(
@@ -29,10 +30,15 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
       }
 
       try {
-        const requests = [];
+        const uploadPromises = [];
+        const fileTypes: ("image" | "file")[] = [];
+
         for (const file of acceptedFiles as StreamFile[]) {
-          if (isImageFile(file)) {
-            requests.push(
+          const isImage = isImageFile(file);
+          fileTypes.push(isImage ? "image" : "file");
+
+          if (isImage) {
+            uploadPromises.push(
               feedsClient.uploadImage({
                 file,
                 // Optionally provide resize params
@@ -53,7 +59,7 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
               })
             );
           } else {
-            requests.push(
+            uploadPromises.push(
               feedsClient.uploadFile({
                 file,
               })
@@ -61,14 +67,23 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
           }
         }
 
-        const fileResponses = await Promise.all(requests);
+        const fileResponses = await Promise.all(uploadPromises);
 
-        // Extract URLs from responses and filter out undefined values
-        const uploadedUrls = fileResponses
-          .map((response) => response.file)
-          .filter((url): url is string => url !== undefined);
-        setFileUrls(uploadedUrls);
-        fieldChange(uploadedUrls);
+        // Create uploaded file objects with URL and type
+        const uploadedFileData: IUploadedFile[] = fileResponses
+          .map((response, index) => {
+            if (response.file) {
+              return {
+                url: response.file,
+                type: fileTypes[index],
+              };
+            }
+            return null;
+          })
+          .filter((item): item is IUploadedFile => item !== null);
+
+        setUploadedFiles(uploadedFileData);
+        fieldChange(uploadedFileData);
       } catch (error) {
         console.error("Error uploading files:", error);
       } finally {
@@ -101,38 +116,36 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
           </div>
         ) : (
           <>
-            <img
-              src="/assets/icons/file-upload.svg"
-              width={96}
-              height={77}
-              alt="file upload"
-            />
-
-            <h3 className="base-medium text-light-2 mb-2 mt-6">
-              Drag photos/videos here
-            </h3>
-            <p className="text-light-4 small-regular mb-6">
-              SVG, PNG, JPG, MP4
+            <div className="flex flex-1 justify-center w-full p-5 lg:p-10 ">
+              <img
+                src={
+                  uploadedFiles.length > 0
+                    ? uploadedFiles[0].url
+                    : "/assets/icons/file-upload.svg"
+                }
+                className="h-80 lg:h-[480px] w-full rounded-[24px] object-cover object-top"
+                alt="image"
+              />
+            </div>
+            <p className="text-light-4 text-center small-regular w-full p-4 border-t border-t-dark-4">
+              {" "}
+              Click or Drag to upload
             </p>
-
-            <Button type="button" className="shad-button_dark_4">
-              Select from computer
-            </Button>
           </>
         )}
       </div>
 
-      {fileUrls.length > 0 && (
+      {uploadedFiles.length > 0 && (
         <div className="flex flex-col gap-2">
           <h4 className="text-light-2 text-sm font-semibold">
             Uploaded Files:
           </h4>
           <div className="grid grid-cols-2 gap-4">
-            {fileUrls.map((url, index) => (
+            {uploadedFiles.map((uploadedFile, index) => (
               <div key={index} className="relative">
-                {files[index]?.type.startsWith("image/") ? (
+                {uploadedFile.type === "image" ? (
                   <img
-                    src={url}
+                    src={uploadedFile.url}
                     alt={`uploaded-${index}`}
                     className="w-full h-32 object-cover rounded-lg"
                   />

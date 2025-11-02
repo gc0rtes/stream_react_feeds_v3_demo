@@ -23,7 +23,12 @@ export const PostValidation = z.object({
     .string()
     .min(5, { message: "Minimum 5 characters." })
     .max(2200, { message: "Maximum 2,200 caracters" }),
-  file: z.array(z.string()),
+  file: z.array(
+    z.object({
+      url: z.string(),
+      type: z.enum(["image", "file"]),
+    })
+  ),
   custom_location: z
     .string()
     .min(1, { message: "This field is required" })

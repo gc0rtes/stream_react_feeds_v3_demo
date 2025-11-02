@@ -35,6 +35,11 @@ export type IUser = {
   bio: string;
 };
 
+export type IUploadedFile = {
+  url: string;
+  type: "image" | "file";
+};
+
 export type INewPost = {
   userId: string;
   text: string;
