@@ -41,7 +41,6 @@ export type IUploadedFile = {
 };
 
 export type INewPost = {
-  userId: string;
   text: string;
   file: File[];
   custom_location?: string;

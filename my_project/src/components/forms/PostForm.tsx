@@ -59,26 +59,24 @@ const PostForm = ({ post, action }: PostFormProps) => {
       return;
     }
 
-    if (!user_id) {
-      toast.error("User ID is not available. Please log in again.");
-      return;
-    }
-
     try {
       // ACTION = CREATE
-      //create a new stream post. The feed group and the feed id can change dynamically according to the app architecture
-      await AddActivity(
-        feedsClient,
-        "user",
-        user_id,
-        data.text,
-        data.file,
-        data.custom_location,
-        data.interest_tags
-      );
 
-      toast.success(`${action} post successful!`);
-      navigate("/");
+      if (action === "Create") {
+        //create a new stream post. The feed group and the feed id can change dynamically according to the app architecture
+        await AddActivity(
+          feedsClient,
+          "user", //feed group
+          user_id, //feed id
+          data.text,
+          data.file,
+          data.custom_location,
+          data.interest_tags
+        );
+
+        toast.success(`${action} post successful!`);
+        navigate("/");
+      }
     } catch (error) {
       console.error("Error creating post:", error);
       toast.error(`${action} post failed. Please try again.`);

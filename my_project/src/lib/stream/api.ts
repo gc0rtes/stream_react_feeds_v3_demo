@@ -37,41 +37,45 @@ export async function AddActivity(
 
   //get or create the feed before adding the activity
   const createdFeed = await feed.getOrCreate();
-  console.log("createdFeed>>>", createdFeed);
+  console.log("getOrCreateFeed>>>", createdFeed);
+  try {
+    // Subscribe to WebSocket events for state updates
+    await feed.getOrCreate({ watch: true });
 
-  // Subscribe to WebSocket events for state updates
-  await feed.getOrCreate({ watch: true });
+    // Convert comma-separated tags string to array
+    const tagsArray = interest_tags
+      ? interest_tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0)
+      : [];
 
-  // Convert comma-separated tags string to array
-  const tagsArray = interest_tags
-    ? interest_tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0)
-    : [];
+    // Create attachments array from uploaded files with their types
+    const attachments = uploadedFiles.map((file) => {
+      return {
+        custom: {},
+        type: file.type,
+        ...(file.type === "image"
+          ? { image_url: file.url }
+          : { asset_url: file.url }),
+      };
+    });
 
-  // Create attachments array from uploaded files with their types
-  const attachments = uploadedFiles.map((file) => {
-    return {
-      custom: {},
-      type: file.type,
-      ...(file.type === "image"
-        ? { image_url: file.url }
-        : { asset_url: file.url }),
-    };
-  });
-
-  //add activity to the feed
-  // Add activity
-  await feed.addActivity({
-    text: text,
-    attachments: attachments,
-    custom: {
-      custom_location: custom_location,
-    },
-    interest_tags: tagsArray,
-    type: "post",
-  });
+    //add activity to the feed
+    // Add activity
+    await feed.addActivity({
+      text: text,
+      attachments: attachments,
+      custom: {
+        custom_location: custom_location,
+      },
+      interest_tags: tagsArray,
+      type: "post",
+    });
+  } catch (error) {
+    console.error("Error adding activity:", error);
+    throw error;
+  }
 }
 
 //get activities from a feed

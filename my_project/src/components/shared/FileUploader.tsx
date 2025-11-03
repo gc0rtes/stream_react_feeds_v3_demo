@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import type { FileRejection } from "react-dropzone";
 import { isImageFile } from "@stream-io/feeds-client";
 import type { StreamFile } from "@stream-io/feeds-client";
 import { useUserContext } from "@/context/AuthContext";
@@ -17,11 +18,13 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
   const [uploadedFiles, setUploadedFiles] =
     useState<IUploadedFile[]>(mediaUrls);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setFiles(acceptedFiles);
       setIsUploading(true);
+      setError(null); // Clear any previous errors
 
       if (!feedsClient) {
         console.error("Feeds client is not initialized");
@@ -83,6 +86,7 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
           .filter((item): item is IUploadedFile => item !== null);
 
         setUploadedFiles(uploadedFileData);
+        console.log("UploadedFiles>>>", uploadedFileData);
         fieldChange(uploadedFileData);
       } catch (error) {
         console.error("Error uploading files:", error);
@@ -93,8 +97,23 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
     [feedsClient, fieldChange]
   );
 
+  const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
+    if (fileRejections.length > 0) {
+      const rejection = fileRejections[0];
+      if (rejection.errors.some((e) => e.code === "file-too-large")) {
+        setError("File size must be less than 10 MB");
+      } else if (rejection.errors.some((e) => e.code === "file-invalid-type")) {
+        setError("Invalid file type. Please upload an image or video file.");
+      } else {
+        setError("File upload failed. Please try again.");
+      }
+    }
+  }, []);
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
+    onDropRejected,
+    maxSize: 10 * 1024 * 1024, // 10 MB in bytes
     accept: {
       "image/*": [".png", ".jpeg", ".jpg", ".svg", ".gif"],
       "video/*": [".mp4", ".webm", ".ogg"],
@@ -103,6 +122,11 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
 
   return (
     <div className="flex flex-col gap-4">
+      {error && (
+        <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
       <div
         {...getRootProps()}
         className="flex flex-center flex-col bg-dark-3 rounded-xl cursor-pointer border-2 border-dashed border-light-4/20 p-7 lg:p-10"
