@@ -84,3 +84,65 @@ export async function getFeedActivities(
   console.log("getOrCreateFeed>>>", activities);
   return activities;
 }
+
+export async function addLike(feedsClient: FeedsClient, activity_id: string) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const addResponse = await feedsClient.addActivityReaction({
+      activity_id: activity_id,
+      type: "like",
+      // Optionally override existing reaction
+      enforce_unique: true,
+    });
+    console.log("addResponse>>>", addResponse);
+  } catch (error) {
+    console.error("Error adding like:", error);
+  }
+}
+
+//Remove a like from an activity
+export async function removeLike(
+  feedsClient: FeedsClient,
+  activity_id: string
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const removeResponse = await feedsClient.deleteActivityReaction({
+      activity_id: activity_id,
+      type: "like",
+    });
+    console.log("removeResponse>>>", removeResponse);
+  } catch (error) {
+    console.error("Error removing like:", error);
+  }
+}
+
+//Pin activity
+export async function pinActivity(
+  feedsClient: FeedsClient,
+  activity_id: string,
+  feed_group: string,
+  feed_id: string
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const pinActivityResponse = await feedsClient.pinActivity({
+      feed_group_id: feed_group,
+      feed_id: feed_id,
+      activity_id: activity_id,
+    });
+    console.log("pinActivityResponse>>>", pinActivityResponse);
+    return pinActivityResponse;
+  } catch (error) {
+    console.error("Error pinning activity:", error);
+  }
+}
