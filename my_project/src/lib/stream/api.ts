@@ -1,15 +1,9 @@
 import { FeedsClient } from "@stream-io/feeds-client";
 import type { IUploadedFile } from "@/types";
 
-/**
- * Closes the WebSocket connection for a Stream Feeds client.
- */
-export async function closeWSFeedsConnection(client: FeedsClient | null) {
-  if (!client) {
-    console.log("No client to disconnect");
-    return;
-  }
+//Closes the WebSocket connection for a Stream Feeds client.
 
+export async function closeWSFeedsConnection(client: FeedsClient) {
   try {
     console.log("Disconnecting Stream Feeds WebSocket...");
 
@@ -79,5 +73,14 @@ export async function AddActivity(
 }
 
 //get activities from a feed
-// const activities = await feed.getActivities();
-// console.log(activities);
+
+export async function getFeedActivities(
+  feedsClient: FeedsClient,
+  feedgroup: string,
+  feed_id: string
+) {
+  const feed = feedsClient.feed(feedgroup, feed_id);
+  const activities = await feed.getOrCreate();
+  console.log("getOrCreateFeed>>>", activities);
+  return activities;
+}

@@ -29,7 +29,9 @@ const LeftSidebar = () => {
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     e.preventDefault();
-    await closeWSFeedsConnection(feedsClient);
+    if (feedsClient) {
+      await closeWSFeedsConnection(feedsClient);
+    }
     setClient(null);
     setIsConnected(false);
     signOut();

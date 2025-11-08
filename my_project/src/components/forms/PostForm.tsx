@@ -86,7 +86,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
   return (
     <form
       id="form-create-post"
-      className="border-2 border-blue-500 flex flex-col gap-9 w-full max-w-3xl"
+      className=" flex flex-col gap-9 w-full max-w-3xl"
       onSubmit={form.handleSubmit(onSubmit)}
     >
       <FieldSet>

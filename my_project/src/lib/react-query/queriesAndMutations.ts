@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { INewUser, IUploadedFile } from "@/types";
 import type { FeedsClient } from "@stream-io/feeds-client";
 
@@ -8,10 +8,11 @@ import {
   signOutAccount,
 } from "../appwrite/api";
 
-import { AddActivity } from "../stream/api";
+import { AddActivity, getFeedActivities } from "../stream/api";
 
 import { QUERY_KEYS } from "./queryKeys";
 
+// Create User Account
 export const useCreateUserAccount = () => {
   //Create user account in the database
   return useMutation({
@@ -19,6 +20,7 @@ export const useCreateUserAccount = () => {
   });
 };
 
+// Sign In Account
 export const useSignInAccount = () => {
   //Sign in account in the database
   return useMutation({
@@ -26,12 +28,16 @@ export const useSignInAccount = () => {
       signInAccount(user.email, user.password),
   });
 };
+
+// Sign Out Account
 export const useSignOutAccount = () => {
   //Sign in account in the database
   return useMutation({
     mutationFn: () => signOutAccount(),
   });
 };
+
+// Create Post
 
 type CreatePostParams = {
   feedsClient: FeedsClient;
@@ -62,5 +68,19 @@ export const useCreatePost = () => {
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
       });
     },
+  });
+};
+
+// Get recent Posts
+
+export const useGetRecentPosts = (
+  feedsClient: FeedsClient,
+  feedgroup: string,
+  feed_id: string
+) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+    queryFn: () => getFeedActivities(feedsClient, feedgroup, feed_id),
+    // enabled: !!feedsClient && !!feedgroup && !!feed_id,
   });
 };

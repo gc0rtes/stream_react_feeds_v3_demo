@@ -37,41 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [feedsClient, setClient] = useState<FeedsClient | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  const connectUser = async (apiKey: string, userId: string | undefined) => {
-    try {
-      if (!userId) {
-        throw new Error("User ID is required");
-      }
-      const feedsClient = new FeedsClient(apiKey);
-      const tokenProvider = await getUserToken(userId);
-      if (!tokenProvider) {
-        throw new Error("Token not found");
-      }
-      console.log("tokenProvider>>>", tokenProvider);
-
-      const connection = await feedsClient.connectUser(
-        { id: userId },
-        tokenProvider
-      );
-      console.log("connection>>>", connection);
-      setClient(feedsClient);
-      console.log("feedsClient>>>", feedsClient);
-      setIsConnected(true);
-      console.log("User connected successfully");
-
-      // Set up event listeners for all WebSocket events
-      feedsClient.on("all", (event) => {
-        console.log("WS event:", event);
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
+  //check if user is authenticated in appwrite
   const checkAuthUser = async () => {
     try {
       const currentUser = await getCurrentUser();
-      console.log("✅ currentUser from DB:", currentUser);
+      console.log("✅ User exists in Appwrite database:", currentUser);
       if (currentUser) {
         //Set user data to state
         const userData = {
@@ -87,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
 
         setIsAuthenticated(true);
-        connectUser(import.meta.env.VITE_STREAM_FEEDS_API_KEY, userData.id);
+        connectUser(import.meta.env.VITE_STREAM_FEEDS_API_KEY, userData);
         return true;
       }
       return false;
@@ -109,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, isAuthenticated]);
 
-  //if user is not authenticated, redirect to sign-in page
+  //Check if user exists in Appwrite database, if user is not authenticated, redirect to sign-in page
   useEffect(() => {
     const cookieFallback = localStorage.getItem("cookieFallback");
 
@@ -131,6 +101,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuthUser();
   }, []);
 
+  //connect user to Stream Feeds
+  const connectUser = async (apiKey: string, userData: IUser) => {
+    try {
+      if (!userData.id) {
+        throw new Error("User ID is required");
+      }
+      const feedsClient = new FeedsClient(apiKey);
+      const tokenProvider = await getUserToken(userData.id);
+      if (!tokenProvider) {
+        throw new Error("Token not found");
+      }
+
+      // Set up event listeners for all WebSocket events
+      feedsClient.on("all", (event) => {
+        console.log("WS event:", event);
+      });
+      console.log(
+        "userdata>>",
+        userData.id,
+        userData.username,
+        userData.imageUrl
+      );
+
+      await feedsClient.connectUser(
+        { id: userData.id, name: userData.username, image: userData.imageUrl },
+        tokenProvider
+      );
+
+      setClient(feedsClient);
+
+      setIsConnected(true);
+      console.log("✅ User connected at Stream successfully");
+    } catch (error) {
+      console.error("❌ Error connecting user at Stream:", error);
+    }
+  };
+
+  //Set the values provider to its children components
   const value = {
     user,
     feedsClient,
