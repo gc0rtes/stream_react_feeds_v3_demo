@@ -88,7 +88,7 @@ const PostCard = ({ post }: PostCardTypes) => {
             </div>
           ))}
       </Link>
-
+      {/* reaction and comment section */}
       <PostStats post={post} user_id={user?.id} />
     </div>
   );

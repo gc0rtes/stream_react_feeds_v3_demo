@@ -8,7 +8,13 @@ import {
   signOutAccount,
 } from "../appwrite/api";
 
-import { AddActivity, getFeedActivities } from "../stream/api";
+import {
+  AddActivity,
+  addLike,
+  bookmarkActivity,
+  getFeedActivities,
+  removeBookmark,
+} from "../stream/api";
 
 import { QUERY_KEYS } from "./queryKeys";
 
@@ -38,7 +44,6 @@ export const useSignOutAccount = () => {
 };
 
 // Create Post
-
 type CreatePostParams = {
   feedsClient: FeedsClient;
   feedgroup: string;
@@ -72,7 +77,6 @@ export const useCreatePost = () => {
 };
 
 // Get recent Posts
-
 export const useGetRecentPosts = (
   feedsClient: FeedsClient,
   feedgroup: string,
@@ -82,5 +86,78 @@ export const useGetRecentPosts = (
     queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
     queryFn: () => getFeedActivities(feedsClient, feedgroup, feed_id),
     // enabled: !!feedsClient && !!feedgroup && !!feed_id,
+  });
+};
+
+/* Add like to a post
+we are storing everything in the cache so the next time you click 
+on the GET_POST_BY_ID query, it will be refetched and 
+you will see the new like count */
+export const useLikePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { feedsClient: FeedsClient; activity_id: string }) =>
+      addLike(params.feedsClient, params.activity_id),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, data?.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+    },
+  });
+};
+
+// SAVE POST
+export const useSavePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      feedsClient: FeedsClient;
+      activity_id: string;
+      folder_id: string;
+    }) =>
+      bookmarkActivity(
+        params.feedsClient,
+        params.activity_id,
+        params.folder_id
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+    },
+  });
+};
+
+export const useDeleteSavedPost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { feedsClient: FeedsClient; activity_id: string }) =>
+      removeBookmark(params.feedsClient, params.activity_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+    },
   });
 };

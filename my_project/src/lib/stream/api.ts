@@ -123,6 +123,47 @@ export async function removeLike(
   }
 }
 
+//Bookmark activity
+export async function bookmarkActivity(
+  feedsClient: FeedsClient,
+  activity_id: string
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const bookmarkActivityResponse = await feedsClient.addBookmark({
+      activity_id: activity_id,
+    });
+    console.log("bookmarkActivityResponse>>>", bookmarkActivityResponse);
+    return bookmarkActivityResponse;
+  } catch (error) {
+    console.error("Error bookmarking activity:", error);
+  }
+}
+
+//Remove a bookmark from an activity
+
+export async function removeBookmark(
+  feedsClient: FeedsClient,
+  activity_id: string
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const removeBookmarkResponse = await feedsClient.deleteBookmark({
+      activity_id: activity_id,
+    });
+    console.log("removeBookmarkResponse>>>", removeBookmarkResponse);
+    return removeBookmarkResponse;
+  } catch (error) {
+    console.error("Error removing bookmark:", error);
+  }
+}
+
 //Pin activity
 export async function pinActivity(
   feedsClient: FeedsClient,

@@ -1,32 +1,89 @@
+import { useState, useEffect } from "react";
 import { useUserContext } from "@/context/AuthContext";
-import { addLike, pinActivity, removeLike } from "@/lib/stream/api";
+import {
+  useDeleteSavedPost,
+  useLikePost,
+  useSavePost,
+} from "@/lib/react-query/queriesAndMutations";
+import {
+  addLike,
+  bookmarkActivity,
+  removeBookmark,
+  removeLike,
+} from "@/lib/stream/api";
 
-const PostStats = ({ post }: { post: any }) => {
-  const { feedsClient } = useUserContext();
+type PostStatsProps = {
+  post: any;
+};
+
+const PostStats = ({ post }: PostStatsProps) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [reactionCount, setReactionCount] = useState(0);
+
+  const { mutate: likePost } = useLikePost();
+  const { mutate: savePost } = useSavePost();
+  const { mutate: deleteSavedPost } = useDeleteSavedPost();
+
+  const { feedsClient, user } = useUserContext();
+
+  useEffect(() => {
+    if (post.reaction_count) {
+      setReactionCount(post.reaction_count);
+    }
+    console.log("reactionCount>>>", reactionCount);
+  }, [post.reaction_count, reactionCount]);
+
+  //Check if the post is already liked and bookmarked by the user
+  useEffect(() => {
+    if (post.own_reactions?.type === "like") {
+      setIsLiked(true);
+    }
+    console.log("isLiked>>>", isLiked);
+  }, [post.own_reactions, isLiked]);
+
+  useEffect(() => {
+    if (post.own_bookmarks?.length > 0) {
+      setIsBookmarked(true);
+    }
+    console.log("bookmarks>>>", isBookmarked);
+  }, [post.own_bookmarks, isBookmarked]);
+
+  const handleAddBookmark = () => {
+    bookmarkActivity(feedsClient!, post.id);
+    setIsBookmarked(true);
+  };
+
+  const handleAddLike = () => {
+    addLike(feedsClient!, post.id);
+    setIsLiked(true);
+    setReactionCount(reactionCount + 1);
+  };
+
+  const handleRemoveBookmark = () => {
+    removeBookmark(feedsClient!, post.id);
+    setIsBookmarked(false);
+    console.log("marking post as not bookmarked>>>");
+  };
+
+  const handleRemoveLike = () => {
+    removeLike(feedsClient!, post.id);
+    setIsLiked(false);
+    setReactionCount(reactionCount - 1);
+  };
 
   return (
     <div>
       <div className="flex justify-between items-center z-20">
         <div className="flex gap-2 mr-5">
-          {post.own_reactions[0]?.type === "like" ? (
-            <img
-              src="/assets/icons/liked.svg"
-              alt="liked"
-              width={20}
-              height={20}
-              className="cursor-pointer"
-              onClick={() => removeLike(feedsClient!, post.id)}
-            />
-          ) : (
-            <img
-              src="/assets/icons/like.svg"
-              alt="like"
-              width={20}
-              height={20}
-              className="cursor-pointer"
-              onClick={() => addLike(feedsClient!, post.id)}
-            />
-          )}
+          <img
+            src={isLiked ? "/assets/icons/liked.svg" : "/assets/icons/like.svg"}
+            alt="liked"
+            width={20}
+            height={20}
+            className="cursor-pointer"
+            onClick={isLiked ? handleRemoveLike : handleAddLike}
+          />
 
           {post.reaction_groups?.like?.count ? (
             <p className="text-[16px] font-medium leading-[140%] lg:text-[18px] lg:font-bold text-light-1">
@@ -34,25 +91,22 @@ const PostStats = ({ post }: { post: any }) => {
             </p>
           ) : (
             <p className="text-[16px] font-medium leading-[140%] lg:text-[18px] lg:font-bold text-light-1">
-              0
+              {reactionCount}
             </p>
           )}
         </div>
         <div className="flex gap-2 mr-5">
           <img
-            src="/assets/icons/save.svg"
-            alt="save"
+            src={
+              isBookmarked
+                ? "/assets/icons/saved.svg"
+                : "/assets/icons/save.svg"
+            }
+            alt="saved"
             width={20}
             height={20}
             className="cursor-pointer"
-            onClick={() =>
-              pinActivity(
-                feedsClient!,
-                post.id,
-                post.current_feed.group_id,
-                post.current_feed.id
-              )
-            }
+            onClick={isBookmarked ? handleRemoveBookmark : handleAddBookmark}
           />
         </div>
       </div>
