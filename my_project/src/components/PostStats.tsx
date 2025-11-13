@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUserContext } from "@/context/AuthContext";
 import {
   useDeleteSavedPost,
@@ -12,18 +12,15 @@ type PostStatsProps = {
 };
 
 const PostStats = ({ post }: PostStatsProps) => {
-  //check if if "some" reaction is a like retunr boolean value
+  //check if if "some" reaction is a like return true or false
   const isLikedStream = post.own_reactions?.some(
     (reaction: any) => reaction.type === "like"
   );
-  const reactionCountStream = post.reaction_count;
 
-  const isBookmarkedStream = post.own_bookmarks?.length > 0;
+  const isBookmarkedStream = !!post.own_bookmarks?.length; //if the post has bookmarks, return true, otherwise false
 
   const [isLiked, setIsLiked] = useState<boolean>(isLikedStream);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(isBookmarkedStream);
-  const [reactionCount, setReactionCount] =
-    useState<number>(reactionCountStream);
 
   const { mutate: likePost } = useLikePost();
   const { mutate: savePost } = useSavePost();
@@ -32,68 +29,40 @@ const PostStats = ({ post }: PostStatsProps) => {
 
   const { feedsClient } = useUserContext();
 
-  console.log("reactionCountStream>>>", reactionCountStream);
-  console.log("reactionCount>>>", reactionCount);
-  console.log("isLikedStream>>>", isLikedStream);
-  console.log("isLiked>>>", isLiked);
-  console.log("isBookmarkedStream>>>", isBookmarkedStream);
-  console.log("isBookmarked>>>", isBookmarked);
-
-  //handle local state for the post stats
-  // useEffect(() => {
-
-  //   if (post.own_reactions?.find((reaction: any) => reaction.type === "like")) {
-  //     setIsLiked(true);
-  //   }
-  //   console.log("isLiked>>>", isLiked);
-
-  //   if (post.own_bookmarks?.length > 0) {
-  //     setIsBookmarked(true);
-  //   }
-  //   console.log("bookmarks>>>", isBookmarked);
-  // }, []);
+  const reactionCountStream = post.reaction_count;
 
   //handle the like and bookmark actions (check video at 4:21)
 
   const handleAddBookmark = () => {
     if (isBookmarked) {
       setIsBookmarked(false);
-      const deletedSavedPost = deleteSavedPost({
+      deleteSavedPost({
         feedsClient: feedsClient!,
         activity_id: post.id,
       });
-      console.log("deletedSavedPost>>>", deletedSavedPost);
     } else {
       setIsBookmarked(true);
-      const savedPost = savePost({
+      savePost({
         feedsClient: feedsClient!,
         activity_id: post.id,
       });
-      console.log("savedPost>>>", savedPost);
     }
   };
 
   const handleAddLike = () => {
     if (isLiked) {
       setIsLiked(false);
-      const deletedLike = deleteLike({
+      deleteLike({
         feedsClient: feedsClient!,
         activity_id: post.id,
         type: "like",
       });
-      console.log("deletedLike>>>", deletedLike);
-      setReactionCount(reactionCount - 1);
-      console.log("reactionCount>>>", reactionCount);
     } else {
       setIsLiked(true);
-      console.log("isLiked>>>", isLiked);
-      const addedLike = likePost({
+      likePost({
         feedsClient: feedsClient!,
         activity_id: post.id,
       });
-      console.log("addedLike>>>", addedLike);
-      setReactionCount(reactionCount + 1);
-      console.log("reactionCount>>>", reactionCount);
     }
   };
 
@@ -116,7 +85,7 @@ const PostStats = ({ post }: PostStatsProps) => {
             </p>
           ) : (
             <p className="text-[16px] font-medium leading-[140%] lg:text-[18px] lg:font-bold text-light-1">
-              {reactionCount}
+              {reactionCountStream}
             </p>
           )}
         </div>
