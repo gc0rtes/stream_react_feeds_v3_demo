@@ -6,6 +6,7 @@ import {
   useSavePost,
   useDeleteLike,
 } from "@/lib/react-query/queriesAndMutations";
+import Loader from "./shared/Loader";
 
 type PostStatsProps = {
   post: any;
@@ -22,10 +23,11 @@ const PostStats = ({ post }: PostStatsProps) => {
   const [isLiked, setIsLiked] = useState<boolean>(isLikedStream);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(isBookmarkedStream);
 
-  const { mutate: likePost } = useLikePost();
-  const { mutate: savePost } = useSavePost();
-  const { mutate: deleteSavedPost } = useDeleteSavedPost();
-  const { mutate: deleteLike } = useDeleteLike();
+  const { mutate: likePost, isPending: isLikingPost } = useLikePost();
+  const { mutate: savePost, isPending: isSavingPost } = useSavePost();
+  const { mutate: deleteSavedPost, isPending: isDeletingSavedPost } =
+    useDeleteSavedPost();
+  const { mutate: deleteLike, isPending: isDeletingLike } = useDeleteLike();
 
   const { feedsClient } = useUserContext();
 
@@ -70,14 +72,20 @@ const PostStats = ({ post }: PostStatsProps) => {
     <div>
       <div className="flex justify-between items-center z-20">
         <div className="flex gap-2 mr-5">
-          <img
-            src={isLiked ? "/assets/icons/liked.svg" : "/assets/icons/like.svg"}
-            alt="liked"
-            width={20}
-            height={20}
-            className="cursor-pointer"
-            onClick={handleAddLike}
-          />
+          {isDeletingLike || isLikingPost ? (
+            <Loader />
+          ) : (
+            <img
+              src={
+                isLiked ? "/assets/icons/liked.svg" : "/assets/icons/like.svg"
+              }
+              alt="liked"
+              width={20}
+              height={20}
+              className="cursor-pointer"
+              onClick={handleAddLike}
+            />
+          )}
 
           {post.reaction_groups?.like?.count ? (
             <p className="text-[16px] font-medium leading-[140%] lg:text-[18px] lg:font-bold text-light-1">
@@ -90,18 +98,22 @@ const PostStats = ({ post }: PostStatsProps) => {
           )}
         </div>
         <div className="flex gap-2 mr-5">
-          <img
-            src={
-              isBookmarked
-                ? "/assets/icons/saved.svg"
-                : "/assets/icons/save.svg"
-            }
-            alt="saved"
-            width={20}
-            height={20}
-            className="cursor-pointer"
-            onClick={handleAddBookmark}
-          />
+          {isSavingPost || isDeletingSavedPost ? (
+            <Loader />
+          ) : (
+            <img
+              src={
+                isBookmarked
+                  ? "/assets/icons/saved.svg"
+                  : "/assets/icons/save.svg"
+              }
+              alt="saved"
+              width={20}
+              height={20}
+              className="cursor-pointer"
+              onClick={handleAddBookmark}
+            />
+          )}
         </div>
       </div>
     </div>
