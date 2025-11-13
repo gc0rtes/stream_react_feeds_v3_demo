@@ -32,22 +32,22 @@ const PostStats = ({ post }: PostStatsProps) => {
       setReactionCount(post.reaction_count);
     }
     console.log("reactionCount>>>", reactionCount);
-  }, [post.reaction_count, reactionCount]);
+  }, []);
 
   //Check if the post is already liked and bookmarked by the user
   useEffect(() => {
-    if (post.own_reactions?.type === "like") {
+    if (post.own_reactions?.find((reaction: any) => reaction.type === "like")) {
       setIsLiked(true);
     }
     console.log("isLiked>>>", isLiked);
-  }, [post.own_reactions, isLiked]);
+  }, []);
 
   useEffect(() => {
     if (post.own_bookmarks?.length > 0) {
       setIsBookmarked(true);
     }
     console.log("bookmarks>>>", isBookmarked);
-  }, [post.own_bookmarks, isBookmarked]);
+  }, []);
 
   const handleAddBookmark = () => {
     bookmarkActivity(feedsClient!, post.id);
