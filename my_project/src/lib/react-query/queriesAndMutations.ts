@@ -14,6 +14,7 @@ import {
   bookmarkActivity,
   getFeedActivities,
   removeBookmark,
+  removeLike,
 } from "../stream/api";
 
 import { QUERY_KEYS } from "./queryKeys";
@@ -115,20 +116,35 @@ export const useLikePost = () => {
   });
 };
 
-// SAVE POST
-export const useSavePost = () => {
+//DELETE LIKE
+export const useDeleteLike = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (params: {
       feedsClient: FeedsClient;
       activity_id: string;
-      folder_id: string;
-    }) =>
-      bookmarkActivity(
-        params.feedsClient,
-        params.activity_id,
-        params.folder_id
-      ),
+      type: string;
+    }) => removeLike(params.feedsClient, params.activity_id, params.type),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+    },
+  });
+};
+
+// SAVE POST
+export const useSavePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { feedsClient: FeedsClient; activity_id: string }) =>
+      bookmarkActivity(params.feedsClient, params.activity_id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],

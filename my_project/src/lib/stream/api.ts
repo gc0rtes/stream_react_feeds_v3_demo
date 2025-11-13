@@ -106,7 +106,8 @@ export async function addLike(feedsClient: FeedsClient, activity_id: string) {
 //Remove a like from an activity
 export async function removeLike(
   feedsClient: FeedsClient,
-  activity_id: string
+  activity_id: string,
+  type: string
 ) {
   try {
     if (!feedsClient) {
@@ -115,7 +116,7 @@ export async function removeLike(
     }
     const removeResponse = await feedsClient.deleteActivityReaction({
       activity_id: activity_id,
-      type: "like",
+      type: type,
     });
     console.log("removeResponse>>>", removeResponse);
   } catch (error) {
