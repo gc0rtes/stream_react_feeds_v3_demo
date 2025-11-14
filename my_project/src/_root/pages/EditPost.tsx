@@ -1,15 +1,15 @@
 import PostForm from "@/components/forms/PostForm";
 
-const UpdatePost = () => {
+const EditPost = () => {
   return (
     <div className="flex flex-1">
       <div className=" flex flex-col flex-1 items-center gap-10 overflow-scroll py-10 px-5 md:px-8 lg:p-14 custom-scrollbar">
         <div className=" max-w-3xl flex-start gap-3 justify-start w-full">
           <img
-            src="/assets/icons/edit.svg"
+            src="/assets/icons/edit-post.svg"
             width={36}
             height={36}
-            alt="update"
+            alt="edit"
           />
           <h2 className="h3-bold md:h2-bold text-left w-full">Edit Post</h2>
         </div>
@@ -19,4 +19,4 @@ const UpdatePost = () => {
   );
 };
 
-export default UpdatePost;
+export default EditPost;
