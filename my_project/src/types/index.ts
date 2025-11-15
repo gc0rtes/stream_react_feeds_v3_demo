@@ -42,7 +42,7 @@ export type IUploadedFile = {
 
 export type INewPost = {
   text: string;
-  file: File[];
+  file: IUploadedFile[];
   custom_location?: string;
   interest_tags?: string;
 };

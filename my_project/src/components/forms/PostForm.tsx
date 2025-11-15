@@ -20,7 +20,7 @@ import { Controller, useForm } from "react-hook-form";
 import { PostValidation } from "@/lib/validation";
 import FileUploader from "../shared/FileUploader";
 import { Input } from "../ui/input";
-import { AddActivity } from "@/lib/stream/api";
+import { AddActivity, UpdateActivityPartial } from "@/lib/stream/api";
 
 import { useUserContext } from "@/context/AuthContext";
 
@@ -29,9 +29,10 @@ import type { INewPost } from "@/types";
 type PostFormProps = {
   post?: INewPost;
   action: "Create" | "Update";
+  activityId?: string;
 };
 
-const PostForm = ({ post, action }: PostFormProps) => {
+const PostForm = ({ post, action, activityId }: PostFormProps) => {
   const { feedsClient } = useUserContext();
   const { user } = useUserContext();
   const user_id = user?.id;
@@ -42,7 +43,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
     resolver: zodResolver(PostValidation),
     defaultValues: {
       text: post ? post?.text : "",
-      file: [],
+      file: post?.file || [],
       custom_location: post ? post.custom_location : "",
       interest_tags: Array.isArray(post?.interest_tags)
         ? post.interest_tags.join(",")
@@ -62,13 +63,21 @@ const PostForm = ({ post, action }: PostFormProps) => {
     try {
       //Action = Update
       if (action === "Update") {
+        if (!activityId) {
+          toast.error("Activity ID is missing. Cannot update post.");
+          return;
+        }
         //update the stream post. The feed group and the feed id can change dynamically according to the app architecture
-        // await UpdateActivityPartial(
-        //   feedsClient,
-        //   activity_id
-        // );
-        // toast.success(`${action} post successful!`);
-        // navigate("/");
+        await UpdateActivityPartial(
+          feedsClient,
+          activityId,
+          data.text,
+          data.file,
+          data.custom_location,
+          data.interest_tags
+        );
+        toast.success(`${action} post successful!`);
+        navigate("/");
       }
 
       // ACTION = CREATE
@@ -88,7 +97,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
         navigate("/");
       }
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("Error creating/updating post:", error);
       toast.error(`${action} post failed. Please try again.`);
     }
   };

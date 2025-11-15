@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import type { FileRejection } from "react-dropzone";
 import { isImageFile } from "@stream-io/feeds-client";
@@ -18,14 +18,23 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
   const [fileUrls, setFileUrls] = useState<string[]>(
     mediaUrls.map((file) => file.url)
   );
+  const [uploadedFiles, setUploadedFiles] =
+    useState<IUploadedFile[]>(mediaUrls);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  console.log("fileUrls>>>", fileUrls);
+
+  // Sync uploadedFiles with mediaUrls when it changes (important for edit mode)
+  useEffect(() => {
+    if (mediaUrls && mediaUrls.length > 0) {
+      setUploadedFiles(mediaUrls);
+      setFileUrls(mediaUrls.map((file) => file.url));
+    }
+  }, [mediaUrls]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setFiles(acceptedFiles);
-      setFileUrls(acceptedFiles.map((file) => file.url));
+      setFileUrls(acceptedFiles.map((file) => URL.createObjectURL(file)));
       setIsUploading(true);
       setError(null); // Clear any previous errors
 

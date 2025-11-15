@@ -1,5 +1,5 @@
 import { FeedsClient } from "@stream-io/feeds-client";
-import type { IUploadedFile } from "@/types";
+import type { IUploadedFile, INewPost } from "@/types";
 
 //get Post by id
 export async function getPostById(
@@ -17,8 +17,79 @@ export async function getPostById(
   return result.activities[0];
 }
 
+// Transform Stream activity to INewPost format
+export function transformActivityToPost(activity: any): INewPost {
+  // Transform attachments to IUploadedFile format
+  const files: IUploadedFile[] =
+    activity.attachments?.map((attachment: any) => ({
+      url: attachment.image_url || attachment.asset_url || "",
+      type: attachment.type as "image" | "file",
+    })) || [];
+
+  // Transform interest_tags array to comma-separated string
+  const interest_tags = Array.isArray(activity.interest_tags)
+    ? activity.interest_tags.join(", ")
+    : "";
+
+  // Get custom_location from custom object
+  const custom_location = activity.custom?.custom_location || "";
+
+  return {
+    text: activity.text || "",
+    file: files,
+    custom_location,
+    interest_tags,
+  };
+}
+
 //Update Activity Partial
-// export async function UpdateActivityPartial(activity) {}
+export async function UpdateActivityPartial(
+  feedsClient: FeedsClient,
+  activity_id: string,
+  text: string,
+  uploadedFiles: IUploadedFile[],
+  custom_location?: string,
+  interest_tags?: string
+) {
+  try {
+    // Convert comma-separated tags string to array
+    const tagsArray = interest_tags
+      ? interest_tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0)
+      : [];
+
+    // Create attachments array from uploaded files with their types
+    const attachments = uploadedFiles.map((file) => {
+      return {
+        custom: {},
+        type: file.type,
+        ...(file.type === "image"
+          ? { image_url: file.url }
+          : { asset_url: file.url }),
+      };
+    });
+
+    // Update the activity using updateActivityPartial
+    await feedsClient.updateActivityPartial({
+      id: activity_id,
+      set: {
+        text: text,
+        attachments: attachments,
+        custom: {
+          custom_location: custom_location,
+        },
+        interest_tags: tagsArray,
+      },
+    });
+
+    console.log("Activity updated successfully");
+  } catch (error) {
+    console.error("Error updating activity:", error);
+    throw error;
+  }
+}
 
 //Closes the WebSocket connection for a Stream Feeds client.
 

@@ -2,16 +2,24 @@ import PostForm from "@/components/forms/PostForm";
 import Loader from "@/components/shared/Loader";
 import { useUserContext } from "@/context/AuthContext";
 import { useGetPostById } from "@/lib/react-query/queriesAndMutations";
+import { transformActivityToPost } from "@/lib/stream/api";
 import { useParams } from "react-router-dom";
+import { useMemo } from "react";
 
 const UpdatePost = () => {
   const { id } = useParams();
   const { feedsClient } = useUserContext();
-  const { data: post, isLoading: isLoadingPost } = useGetPostById(
+  const { data: activity, isLoading: isLoadingPost } = useGetPostById(
     feedsClient!,
     id || ""
   );
-  console.log("post>>>", post);
+  console.log("post>>>", activity);
+
+  // Transform the Stream activity to INewPost format
+  const post = useMemo(() => {
+    if (!activity) return undefined;
+    return transformActivityToPost(activity);
+  }, [activity]);
 
   if (isLoadingPost) return <Loader />;
 
@@ -27,7 +35,7 @@ const UpdatePost = () => {
           />
           <h2 className="h3-bold md:h2-bold text-left w-full">Update Post</h2>
         </div>
-        <PostForm action="Update" post={post} />
+        <PostForm action="Update" post={post} activityId={id} />
       </div>
     </div>
   );
