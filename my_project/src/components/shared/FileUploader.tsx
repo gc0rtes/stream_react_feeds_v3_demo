@@ -15,9 +15,6 @@ type FileUploaderProps = {
 const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
   const { feedsClient } = useUserContext();
   const [files, setFiles] = useState<File[]>([]);
-  const [fileUrls, setFileUrls] = useState<string[]>(
-    mediaUrls.map((file) => file.url)
-  );
   const [uploadedFiles, setUploadedFiles] =
     useState<IUploadedFile[]>(mediaUrls);
   const [isUploading, setIsUploading] = useState(false);
@@ -27,14 +24,29 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
   useEffect(() => {
     if (mediaUrls && mediaUrls.length > 0) {
       setUploadedFiles(mediaUrls);
-      setFileUrls(mediaUrls.map((file) => file.url));
     }
   }, [mediaUrls]);
+
+  // Handle removing a file
+  const handleRemoveFile = useCallback(
+    (indexToRemove: number) => {
+      const newUploadedFiles = uploadedFiles.filter(
+        (_, index) => index !== indexToRemove
+      );
+      const newFiles = files.filter((_, index) => index !== indexToRemove);
+
+      setUploadedFiles(newUploadedFiles);
+      setFiles(newFiles);
+
+      // Update the form field
+      fieldChange(newUploadedFiles);
+    },
+    [uploadedFiles, files, fieldChange]
+  );
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setFiles(acceptedFiles);
-      setFileUrls(acceptedFiles.map((file) => URL.createObjectURL(file)));
       setIsUploading(true);
       setError(null); // Clear any previous errors
 
@@ -152,7 +164,7 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
           </div>
         ) : (
           <>
-            <div className="flex flex-1 justify-center w-full p-5 lg:p-10 ">
+            <div className="flex flex-1 justify-center w-full p-5 lg:p-10 relative">
               <img
                 src={
                   uploadedFiles.length > 0
@@ -162,6 +174,33 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
                 className="h-80 lg:h-[480px] w-full rounded-[24px] object-cover object-top"
                 alt="image"
               />
+              {uploadedFiles.length > 0 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile(0);
+                  }}
+                  className="absolute top-7 right-7 bg-dark-4 hover:bg-dark-3 rounded-full p-2 transition-colors"
+                  title="Remove image"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-light-1"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              )}
             </div>
             <p className="text-light-4 text-center small-regular w-full p-4 border-t border-t-dark-4">
               {" "}
@@ -178,7 +217,7 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
           </h4>
           <div className="grid grid-cols-2 gap-4">
             {uploadedFiles.map((uploadedFile, index) => (
-              <div key={index} className="relative">
+              <div key={index} className="relative group">
                 {uploadedFile.type === "image" ? (
                   <img
                     src={uploadedFile.url}
@@ -190,6 +229,31 @@ const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
                     <p className="text-light-4 text-xs">{files[index]?.name}</p>
                   </div>
                 )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile(index);
+                  }}
+                  className="absolute top-1 right-1 bg-dark-4 hover:bg-red-600 rounded-full p-1.5 transition-colors opacity-0 group-hover:opacity-100"
+                  title="Remove file"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-light-1"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
               </div>
             ))}
           </div>
