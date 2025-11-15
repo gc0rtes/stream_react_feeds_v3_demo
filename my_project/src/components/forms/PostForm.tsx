@@ -60,8 +60,18 @@ const PostForm = ({ post, action }: PostFormProps) => {
     }
 
     try {
-      // ACTION = CREATE
+      //Action = Update
+      if (action === "Update") {
+        //update the stream post. The feed group and the feed id can change dynamically according to the app architecture
+        // await UpdateActivityPartial(
+        //   feedsClient,
+        //   activity_id
+        // );
+        // toast.success(`${action} post successful!`);
+        // navigate("/");
+      }
 
+      // ACTION = CREATE
       if (action === "Create") {
         //create a new stream post. The feed group and the feed id can change dynamically according to the app architecture
         await AddActivity(

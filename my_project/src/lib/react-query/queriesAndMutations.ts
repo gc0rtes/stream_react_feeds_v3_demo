@@ -13,11 +13,24 @@ import {
   addLike,
   bookmarkActivity,
   getFeedActivities,
+  getPostById,
   removeBookmark,
   removeLike,
 } from "../stream/api";
 
 import { QUERY_KEYS } from "./queryKeys";
+
+/** GET POST BY ID */
+export const useGetPostById = (
+  feedsClient: FeedsClient,
+  activity_id: string
+) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_POST_BY_ID, activity_id],
+    queryFn: () => getPostById(feedsClient, activity_id),
+    enabled: !!activity_id, //we want to fetch the post only if the activity_id is another id
+  });
+};
 
 // Create User Account
 export const useCreateUserAccount = () => {
@@ -158,7 +171,7 @@ export const useSavePost = () => {
     },
   });
 };
-
+//Delete Saved Post
 export const useDeleteSavedPost = () => {
   const queryClient = useQueryClient();
   return useMutation({

@@ -15,14 +15,17 @@ type FileUploaderProps = {
 const FileUploader = ({ fieldChange, mediaUrls }: FileUploaderProps) => {
   const { feedsClient } = useUserContext();
   const [files, setFiles] = useState<File[]>([]);
-  const [uploadedFiles, setUploadedFiles] =
-    useState<IUploadedFile[]>(mediaUrls);
+  const [fileUrls, setFileUrls] = useState<string[]>(
+    mediaUrls.map((file) => file.url)
+  );
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  console.log("fileUrls>>>", fileUrls);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setFiles(acceptedFiles);
+      setFileUrls(acceptedFiles.map((file) => file.url));
       setIsUploading(true);
       setError(null); // Clear any previous errors
 

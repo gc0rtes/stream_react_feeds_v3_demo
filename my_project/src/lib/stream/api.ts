@@ -1,6 +1,25 @@
 import { FeedsClient } from "@stream-io/feeds-client";
 import type { IUploadedFile } from "@/types";
 
+//get Post by id
+export async function getPostById(
+  feedsClient: FeedsClient,
+  activity_id: string
+) {
+  const result = await feedsClient.queryActivities({
+    filter: {
+      id: { $eq: activity_id },
+    },
+    sort: [{ field: "created_at", direction: -1 }],
+    limit: 1,
+  });
+
+  return result.activities[0];
+}
+
+//Update Activity Partial
+// export async function UpdateActivityPartial(activity) {}
+
 //Closes the WebSocket connection for a Stream Feeds client.
 
 export async function closeWSFeedsConnection(client: FeedsClient) {
@@ -56,7 +75,6 @@ export async function AddActivity(
     });
 
     //add activity to the feed
-    // Add activity
     await feed.addActivity({
       text: text,
       attachments: attachments,
@@ -73,7 +91,6 @@ export async function AddActivity(
 }
 
 //get activities from a feed
-
 export async function getFeedActivities(
   feedsClient: FeedsClient,
   feedgroup: string,
@@ -85,6 +102,7 @@ export async function getFeedActivities(
   return activities;
 }
 
+//add like
 export async function addLike(feedsClient: FeedsClient, activity_id: string) {
   try {
     if (!feedsClient) {
