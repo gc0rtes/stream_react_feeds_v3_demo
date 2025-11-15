@@ -16,6 +16,7 @@ import {
   getPostById,
   removeBookmark,
   removeLike,
+  UpdateActivityPartial,
 } from "../stream/api";
 
 import { QUERY_KEYS } from "./queryKeys";
@@ -90,6 +91,42 @@ export const useCreatePost = () => {
   });
 };
 
+// Update Post
+type UpdatePostParams = {
+  feedsClient: FeedsClient;
+  activity_id: string;
+  text: string;
+  uploadedFiles: IUploadedFile[];
+  custom_location?: string;
+  interest_tags?: string;
+};
+
+export const useUpdatePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: UpdatePostParams) =>
+      UpdateActivityPartial(
+        params.feedsClient,
+        params.activity_id,
+        params.text,
+        params.uploadedFiles,
+        params.custom_location,
+        params.interest_tags
+      ),
+    // Triggers refetches when data changes
+    onSuccess: (_data, variables) => {
+      // Invalidate the specific post query
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, variables.activity_id],
+      });
+      // Invalidate the recent posts query
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+    },
+  });
+};
+
 // Get recent Posts
 export const useGetRecentPosts = (
   feedsClient: FeedsClient,
@@ -112,9 +149,9 @@ export const useLikePost = () => {
   return useMutation({
     mutationFn: (params: { feedsClient: FeedsClient; activity_id: string }) =>
       addLike(params.feedsClient, params.activity_id),
-    onSuccess: (data: any) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.GET_POST_BY_ID, data?.id],
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, variables.activity_id],
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],

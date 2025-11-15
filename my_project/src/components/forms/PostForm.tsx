@@ -20,7 +20,8 @@ import { Controller, useForm } from "react-hook-form";
 import { PostValidation } from "@/lib/validation";
 import FileUploader from "../shared/FileUploader";
 import { Input } from "../ui/input";
-import { AddActivity, UpdateActivityPartial } from "@/lib/stream/api";
+import { AddActivity } from "@/lib/stream/api";
+import { useUpdatePost } from "@/lib/react-query/queriesAndMutations";
 
 import { useUserContext } from "@/context/AuthContext";
 
@@ -38,6 +39,7 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
   const user_id = user?.id;
 
   const navigate = useNavigate();
+  const { mutateAsync: updatePost, isPending: isUpdating } = useUpdatePost();
 
   const form = useForm<z.infer<typeof PostValidation>>({
     resolver: zodResolver(PostValidation),
@@ -67,15 +69,15 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
           toast.error("Activity ID is missing. Cannot update post.");
           return;
         }
-        //update the stream post. The feed group and the feed id can change dynamically according to the app architecture
-        await UpdateActivityPartial(
+        //update the stream post using React Query mutation
+        await updatePost({
           feedsClient,
-          activityId,
-          data.text,
-          data.file,
-          data.custom_location,
-          data.interest_tags
-        );
+          activity_id: activityId,
+          text: data.text,
+          uploadedFiles: data.file,
+          custom_location: data.custom_location,
+          interest_tags: data.interest_tags,
+        });
         toast.success(`${action} post successful!`);
         navigate("/");
       }
@@ -217,13 +219,15 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
           type="submit"
           className="h-10 px-5 bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2 !important"
           form="form-create-post"
+          disabled={isUpdating}
         >
-          Submit
+          {isUpdating ? "Updating..." : "Submit"}
         </Button>
         <Button
           type="button"
           className="h-10 bg-dark-4 px-5 text-light-1 flex gap-2 !important"
           form="form-create-post"
+          onClick={() => navigate(-1)}
         >
           Cancel
         </Button>
