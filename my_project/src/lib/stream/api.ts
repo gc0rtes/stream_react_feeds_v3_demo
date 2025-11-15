@@ -1,6 +1,72 @@
 import { FeedsClient } from "@stream-io/feeds-client";
 import type { IUploadedFile, INewPost } from "@/types";
 
+// deleteImage
+export async function deleteImage(feedsClient: FeedsClient, url: string) {
+  try {
+    await feedsClient.deleteImage({
+      url: url,
+    });
+    console.log("Image deleted successfully");
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    throw error;
+  }
+}
+
+//delete file
+export async function deleteFile(feedsClient: FeedsClient, url: string) {
+  try {
+    await feedsClient.deleteFile({
+      url: url,
+    });
+    console.log("File deleted successfully");
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    throw error;
+  }
+}
+
+//delete activity
+export async function deleteActivity(
+  feedsClient: FeedsClient,
+  activity_id: string
+) {
+  try {
+    // First, get the activity to retrieve its attachments
+    const activity = await getPostById(feedsClient, activity_id);
+
+    // Delete all attachments (images/files) associated with this activity
+    if (activity?.attachments && activity.attachments.length > 0) {
+      for (const attachment of activity.attachments) {
+        const url = attachment.image_url || attachment.asset_url;
+        if (url) {
+          try {
+            if (attachment.type === "image") {
+              await deleteImage(feedsClient, url);
+            } else if (attachment.type === "file") {
+              await deleteFile(feedsClient, url);
+            }
+          } catch (error) {
+            console.error(`Error deleting ${attachment.type}:`, error);
+            // Continue deleting other attachments even if one fails
+          }
+        }
+      }
+    }
+
+    // Finally, delete the activity itself
+    await feedsClient.deleteActivity({
+      id: activity_id,
+      hard_delete: false,
+    });
+    console.log("Activity and its attachments deleted successfully");
+  } catch (error) {
+    console.error("Error deleting activity:", error);
+    throw error;
+  }
+}
+
 //get Post by id
 export async function getPostById(
   feedsClient: FeedsClient,

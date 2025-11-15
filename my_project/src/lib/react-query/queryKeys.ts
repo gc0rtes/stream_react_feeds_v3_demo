@@ -1,4 +1,4 @@
-//this is a way to misspell the query keys and
+//this is a way to not misspell the query keys and
 // catch the errors at compile time
 export const QUERY_KEYS = {
   // AUTH KEYS

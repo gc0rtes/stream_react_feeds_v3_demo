@@ -20,8 +20,11 @@ import { Controller, useForm } from "react-hook-form";
 import { PostValidation } from "@/lib/validation";
 import FileUploader from "../shared/FileUploader";
 import { Input } from "../ui/input";
-import { AddActivity } from "@/lib/stream/api";
-import { useUpdatePost } from "@/lib/react-query/queriesAndMutations";
+
+import {
+  useUpdatePost,
+  useCreatePost,
+} from "@/lib/react-query/queriesAndMutations";
 
 import { useUserContext } from "@/context/AuthContext";
 
@@ -39,6 +42,8 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
   const user_id = user?.id;
 
   const navigate = useNavigate();
+
+  const { mutateAsync: createPost, isPending: isCreating } = useCreatePost();
   const { mutateAsync: updatePost, isPending: isUpdating } = useUpdatePost();
 
   const form = useForm<z.infer<typeof PostValidation>>({
@@ -64,7 +69,7 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
 
     try {
       //Action = Update
-      if (action === "Update") {
+      if (post && action === "Update") {
         if (!activityId) {
           toast.error("Activity ID is missing. Cannot update post.");
           return;
@@ -79,25 +84,25 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
           interest_tags: data.interest_tags,
         });
         toast.success(`${action} post successful!`);
-        navigate("/");
+
+        return navigate(`/post/${activityId}`);
       }
 
       // ACTION = CREATE
-      if (action === "Create") {
-        //create a new stream post. The feed group and the feed id can change dynamically according to the app architecture
-        await AddActivity(
-          feedsClient,
-          "user", //feed group
-          user_id, //feed id
-          data.text,
-          data.file,
-          data.custom_location,
-          data.interest_tags
-        );
+      //create a new stream post.
+      // TODO: change dynamically according to the app architecture
+      await createPost({
+        feedsClient,
+        feedgroup: "user", //feed group
+        feed_id: user_id!, //feed id
+        text: data.text,
+        uploadedFiles: data.file,
+        custom_location: data.custom_location,
+        interest_tags: data.interest_tags,
+      });
 
-        toast.success(`${action} post successful!`);
-        navigate("/");
-      }
+      toast.success(`${action} post successful!`);
+      navigate("/");
     } catch (error) {
       console.error("Error creating/updating post:", error);
       toast.error(`${action} post failed. Please try again.`);
@@ -219,9 +224,9 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
           type="submit"
           className="h-10 px-5 bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2 !important"
           form="form-create-post"
-          disabled={isUpdating}
+          disabled={isUpdating || isCreating}
         >
-          {isUpdating ? "Updating..." : "Submit"}
+          {isUpdating || (isCreating && "Loading...")} {action} Post
         </Button>
         <Button
           type="button"

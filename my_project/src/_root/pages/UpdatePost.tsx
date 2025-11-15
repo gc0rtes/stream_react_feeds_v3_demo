@@ -9,6 +9,8 @@ import { useMemo } from "react";
 const UpdatePost = () => {
   const { id } = useParams();
   const { feedsClient } = useUserContext();
+
+  //Pass the cached activity from the query to the PostForm component
   const { data: activity, isLoading: isLoadingPost } = useGetPostById(
     feedsClient!,
     id || ""
@@ -16,6 +18,7 @@ const UpdatePost = () => {
   console.log("post>>>", activity);
 
   // Transform the Stream activity to INewPost format
+  // to pass to the PostForm component as the post prop
   const post = useMemo(() => {
     if (!activity) return undefined;
     return transformActivityToPost(activity);
