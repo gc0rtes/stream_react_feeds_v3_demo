@@ -175,7 +175,7 @@ const PostCard = ({ post }: PostCardTypes) => {
         )}
       </Link>
       {/* reaction and comment section */}
-      <PostStats post={post} user_id={user?.id} />
+      <PostStats post={post} />
     </div>
   );
 };

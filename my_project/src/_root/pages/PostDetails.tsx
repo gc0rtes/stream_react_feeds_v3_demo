@@ -4,6 +4,8 @@ import { Link, useParams } from "react-router-dom";
 import Loader from "@/components/shared/Loader";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import PostStats from "@/components/PostStats";
 
 const PostDetails = () => {
   const { user } = useUserContext();
@@ -41,6 +43,10 @@ const PostDetails = () => {
     e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex(index);
+  };
+
+  const handleDeletePost = () => {
+    console.log("handleDeletePost>>>");
   };
 
   if (isLoadingPost || !activity) return <Loader />;
@@ -160,15 +166,36 @@ const PostDetails = () => {
                   />
                 </Link>
 
-                <Link to={`/delete-post/${activity?.id}`}>
+                <Button
+                  // src="/assets/icons/delete.svg"
+                  // alt="delete"
+                  onClick={handleDeletePost}
+                  variant="ghost"
+                  className="p-0 flex gap-3 hover:bg-transparent hover:text-light-1  text-light-1 small-medium lg:base-medium"
+                >
                   <img
                     src="/assets/icons/delete.svg"
                     alt="delete"
                     className="h-5 w-5"
                   />
-                </Link>
+                </Button>
               </div>
             )}
+          </div>
+          <hr className="border w-full border-white/10" />
+          <div className="flex flex-col flex-1 w-full small-medium lg:base-regular">
+            <p>{activity?.text}</p>
+            <ul className="flex gap-1 mt-2">
+              {activity?.interest_tags.map((tag: string) => (
+                <li key={tag} className="text-light-3">
+                  #{tag}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="w-full ">
+            <PostStats post={activity} />
           </div>
         </div>
       </div>
