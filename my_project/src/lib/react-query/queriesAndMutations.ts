@@ -197,7 +197,10 @@ export const useDeleteLike = () => {
       activity_id: string;
       type: string;
     }) => removeLike(params.feedsClient, params.activity_id, params.type),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, variables.activity_id],
+      });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
       });
@@ -217,7 +220,10 @@ export const useSavePost = () => {
   return useMutation({
     mutationFn: (params: { feedsClient: FeedsClient; activity_id: string }) =>
       bookmarkActivity(params.feedsClient, params.activity_id),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, variables.activity_id],
+      });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
       });
@@ -236,7 +242,10 @@ export const useDeleteSavedPost = () => {
   return useMutation({
     mutationFn: (params: { feedsClient: FeedsClient; activity_id: string }) =>
       removeBookmark(params.feedsClient, params.activity_id),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, variables.activity_id],
+      });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
       });

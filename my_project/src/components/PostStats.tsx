@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserContext } from "@/context/AuthContext";
 import {
   useDeleteSavedPost,
@@ -22,6 +22,12 @@ const PostStats = ({ post }: PostStatsProps) => {
 
   const [isLiked, setIsLiked] = useState<boolean>(isLikedStream);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(isBookmarkedStream);
+
+  // Sync local state with post prop when it changes (e.g., when navigating between screens)
+  useEffect(() => {
+    setIsLiked(isLikedStream);
+    setIsBookmarked(isBookmarkedStream);
+  }, [isLikedStream, isBookmarkedStream]);
 
   const { mutate: likePost, isPending: isLikingPost } = useLikePost();
   const { mutate: savePost, isPending: isSavingPost } = useSavePost();
