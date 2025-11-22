@@ -270,18 +270,25 @@ export async function getSearchPosts(
   searchQuery: string
 ) {
   try {
+    // Trim and split search query by spaces into individual words
+    const trimmedQuery = searchQuery.trim();
+    const searchWords = trimmedQuery
+      .split(/\s+/) // Split by one or more spaces
+      .map((word) => word.trim())
+      .filter((word) => word.length > 0);
+
     const result = await feedsClient.queryActivities({
       filter: {
         activity_type: "post",
         $or: [
           {
             text: {
-              $autocomplete: searchQuery,
+              $autocomplete: trimmedQuery,
             },
           },
           {
             interest_tags: {
-              $in: searchQuery.split(","),
+              $in: searchWords,
             },
           },
         ],

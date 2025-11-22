@@ -7,6 +7,7 @@ import {
   useGetRecentPosts,
   useGetSearchPosts,
 } from "@/lib/react-query/queriesAndMutations";
+import Loader from "@/components/shared/Loader";
 
 const Explore = () => {
   const { user, feedsClient } = useUserContext();
@@ -107,7 +108,10 @@ const Explore = () => {
         ) : shouldShowEndOfPosts ? (
           <p className="text-light-4 mt-10 text-center w-full ">End of Posts</p>
         ) : isPostLoading ? (
-          <p className="text-light-4 mt-10 text-center w-full">Loading...</p>
+          <>
+            <Loader />
+            <p className="text-light-4 mt-10 text-center w-full">Loading...</p>
+          </>
         ) : (
           posts?.activities?.map((activity) => (
             <GridPostList key={activity.id} post={activity} />

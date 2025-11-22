@@ -82,6 +82,7 @@ export const useGetSearchPosts = (
   return useQuery({
     queryKey: [QUERY_KEYS.SEARCH_POSTS, searchQuery],
     queryFn: () => getSearchPosts(feedsClient!, searchQuery),
+    //Uses enabled to only run when there's a search query and feedsClient is not null
     enabled: !!feedsClient && searchQuery.trim().length > 0,
   });
 };
