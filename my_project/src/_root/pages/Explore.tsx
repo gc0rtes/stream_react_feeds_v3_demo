@@ -9,15 +9,21 @@ import {
 } from "@/lib/react-query/queriesAndMutations";
 import Loader from "@/components/shared/Loader";
 
+import useDebounce from "@/hooks/useDebounce";
+
 const Explore = () => {
+  const [searchValue, setSearchValue] = useState("");
+
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+
   const { user, feedsClient } = useUserContext();
   const user_id = user?.id;
-  const [searchValue, setSearchValue] = useState("");
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
 
+  /* FORYOU FEEDS*/
   const { data: posts, isPending: isPostLoading } = useGetRecentPosts(
     feedsClient!,
     "foryou",
@@ -25,9 +31,7 @@ const Explore = () => {
   ); //The non-null assertions (!) tell TypeScript that we're confident these values won't actually be null when used by the hook.
   console.log("posts>>>", posts);
 
-  // Debounced search value - only trigger query after user stops typing
-  const [debouncedSearchValue, setDebouncedSearchValue] = useState("");
-
+  /* SEARCH */
   // Debounce search - update debounced value after user stops typing for 500ms
   useEffect(() => {
     const timeoutId = setTimeout(() => {

@@ -256,10 +256,13 @@ export async function AddActivity(
 export async function getFeedActivities(
   feedsClient: FeedsClient,
   feedgroup: string,
-  feed_id: string
+  feed_id: string,
+  next?: string // Optional cursor for pagination
 ) {
   const feed = feedsClient.feed(feedgroup, feed_id);
-  const activities = await feed.getOrCreate();
+  const activities = await feed.getOrCreate({
+    ...(next && { next }), // Include next cursor if provided
+  });
   console.log("getOrCreateFeed>>>", activities);
   return activities;
 }

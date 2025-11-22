@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { INewUser, IUploadedFile } from "@/types";
 import type { FeedsClient } from "@stream-io/feeds-client";
 
@@ -62,6 +67,24 @@ export const useGetRecentPosts = (
   });
 };
 
+/** GET INFINITE POSTS */
+export const useGetInfinitePosts = (
+  feedsClient: FeedsClient,
+  feedgroup: string,
+  feed_id: string
+) => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.GET_INFINITE_POSTS, feedgroup, feed_id],
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      getFeedActivities(feedsClient, feedgroup, feed_id, pageParam),
+    initialPageParam: undefined as string | undefined, // First page doesn't need a cursor
+    getNextPageParam: (lastPage) => {
+      // Return the next cursor if it exists, otherwise return undefined to stop pagination
+      return lastPage?.next || undefined;
+    },
+  });
+};
+
 /** GET POST BY ID */
 export const useGetPostById = (
   feedsClient: FeedsClient,
@@ -80,10 +103,10 @@ export const useGetSearchPosts = (
   searchQuery: string
 ) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.SEARCH_POSTS, searchQuery],
+    queryKey: [QUERY_KEYS.SEARCH_POSTS],
     queryFn: () => getSearchPosts(feedsClient!, searchQuery),
-    //Uses enabled to only run when there's a search query and feedsClient is not null
-    enabled: !!feedsClient && searchQuery.trim().length > 0,
+    //Uses enabled to refetch when the search term changes
+    enabled: !!searchQuery,
   });
 };
 
