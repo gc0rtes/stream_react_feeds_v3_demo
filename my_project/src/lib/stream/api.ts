@@ -137,17 +137,29 @@ export async function UpdateActivityPartial(
       };
     });
 
+    // Build the set object conditionally - only include interest_tags if there are tags
+    const setObject: {
+      text: string;
+      attachments: typeof attachments;
+      custom: { custom_location?: string };
+      interest_tags?: string[];
+    } = {
+      text: text,
+      attachments: attachments,
+      custom: {
+        custom_location: custom_location,
+      },
+    };
+
+    // Only include interest_tags if there are tags to avoid sending empty array
+    if (tagsArray.length > 0) {
+      setObject.interest_tags = tagsArray;
+    }
+
     // Update the activity using updateActivityPartial
     await feedsClient.updateActivityPartial({
       id: activity_id,
-      set: {
-        text: text,
-        attachments: attachments,
-        custom: {
-          custom_location: custom_location,
-        },
-        interest_tags: tagsArray,
-      },
+      set: setObject,
     });
 
     console.log("Activity updated successfully");
@@ -211,16 +223,29 @@ export async function AddActivity(
       };
     });
 
-    //add activity to the feed
-    await feed.addActivity({
+    // Build the activity object conditionally - only include interest_tags if there are tags
+    const activityObject: {
+      text: string;
+      attachments: typeof attachments;
+      custom: { custom_location?: string };
+      type: string;
+      interest_tags?: string[];
+    } = {
       text: text,
       attachments: attachments,
       custom: {
         custom_location: custom_location,
       },
-      interest_tags: tagsArray,
       type: "post",
-    });
+    };
+
+    // Only include interest_tags if there are tags to avoid sending empty array
+    if (tagsArray.length > 0) {
+      activityObject.interest_tags = tagsArray;
+    }
+
+    //add activity to the feed
+    await feed.addActivity(activityObject);
   } catch (error) {
     console.error("Error adding activity:", error);
     throw error;

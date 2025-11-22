@@ -2,18 +2,36 @@ import GridPostList from "@/components/shared/GridPostList";
 import SearchResults from "@/components/shared/SearchResults";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useUserContext } from "@/context/AuthContext";
+import { useGetRecentPosts } from "@/lib/react-query/queriesAndMutations";
 const Explore = () => {
+  const { user, feedsClient } = useUserContext();
+  const user_id = user?.id;
   const [searchValue, setSearchValue] = useState("");
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
-  const posts = [];
 
-  const shouldShowSearchResults = searchValue.length !== "";
-  const shouldShowPosts =
+  const { data: posts, isPending: isPostLoading } = useGetRecentPosts(
+    feedsClient!,
+    "foryou",
+    user_id!
+  ); //The non-null assertions (!) tell TypeScript that we're confident these values won't actually be null when used by the hook.
+  console.log("posts>>>", posts);
+
+  // Show search results if user is actively searching
+  const shouldShowSearchResults = searchValue.trim().length > 0;
+
+  // Show "End of Posts" message only if:
+  // - Not searching AND
+  // - Feed has been loaded AND
+  // - No activities (posts) in the feed
+  const shouldShowEndOfPosts =
     !shouldShowSearchResults &&
-    posts.pages.every((page) => page.activities.length === 0);
+    !isPostLoading &&
+    posts &&
+    (!posts.activities || posts.activities.length === 0);
 
   return (
     <div className="flex flex-col flex-1 items-center overflow-scroll py-10 px-5 md:p-14 custom-scrollbar">
@@ -50,14 +68,14 @@ const Explore = () => {
       <div className="flex flex-wrap gap-9 w-full max-w-5xl">
         {shouldShowSearchResults ? (
           <SearchResults />
-        ) : shouldShowPosts ? (
+        ) : shouldShowEndOfPosts ? (
           <p className="text-light-4 mt-10 text-center w-full ">End of Posts</p>
+        ) : isPostLoading ? (
+          <p className="text-light-4 mt-10 text-center w-full">Loading...</p>
         ) : (
-          posts.pages.map((page) =>
-            page.activities.map((activity, index) => (
-              <GridPostList key={index} post={activity} />
-            ))
-          )
+          posts?.activities?.map((activity) => (
+            <GridPostList key={activity.id} post={activity} />
+          ))
         )}
       </div>
     </div>
