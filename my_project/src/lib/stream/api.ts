@@ -264,6 +264,39 @@ export async function getFeedActivities(
   return activities;
 }
 
+//search activities by query
+export async function getSearchPosts(
+  feedsClient: FeedsClient,
+  searchQuery: string
+) {
+  try {
+    const result = await feedsClient.queryActivities({
+      filter: {
+        activity_type: "post",
+        $or: [
+          {
+            text: {
+              $autocomplete: searchQuery,
+            },
+          },
+          {
+            interest_tags: {
+              $in: searchQuery.split(","),
+            },
+          },
+        ],
+      },
+      sort: [{ field: "created_at", direction: -1 }],
+      limit: 10,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error searching activities:", error);
+    throw error;
+  }
+}
+
 //add like
 export async function addLike(feedsClient: FeedsClient, activity_id: string) {
   try {

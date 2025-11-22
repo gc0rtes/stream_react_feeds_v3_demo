@@ -1,10 +1,21 @@
 import React from "react";
+import GridPostList from "./GridPostList";
 
-const SearchResults = () => {
+type SearchResultsProps = {
+  searchResults: any[];
+};
+
+const SearchResults = ({ searchResults }: SearchResultsProps) => {
+  if (!searchResults || searchResults.length === 0) {
+    return null;
+  }
+
   return (
-    <div>
-      <h2 className="h3-bold md:h2-bold text-left w-full">Search Results</h2>
-    </div>
+    <>
+      {searchResults.map((activity) => (
+        <GridPostList key={activity.id} post={activity} />
+      ))}
+    </>
   );
 };
 

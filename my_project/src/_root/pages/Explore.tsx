@@ -1,9 +1,13 @@
 import GridPostList from "@/components/shared/GridPostList";
 import SearchResults from "@/components/shared/SearchResults";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserContext } from "@/context/AuthContext";
-import { useGetRecentPosts } from "@/lib/react-query/queriesAndMutations";
+import {
+  useGetRecentPosts,
+  useGetSearchPosts,
+} from "@/lib/react-query/queriesAndMutations";
+
 const Explore = () => {
   const { user, feedsClient } = useUserContext();
   const user_id = user?.id;
@@ -20,15 +24,37 @@ const Explore = () => {
   ); //The non-null assertions (!) tell TypeScript that we're confident these values won't actually be null when used by the hook.
   console.log("posts>>>", posts);
 
-  // Show search results if user is actively searching
-  const shouldShowSearchResults = searchValue.trim().length > 0;
+  // Debounced search value - only trigger query after user stops typing
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState("");
+
+  // Debounce search - update debounced value after user stops typing for 500ms
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchValue(searchValue.trim());
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchValue]);
+
+  // Search query - only runs when debouncedSearchValue has content
+  const { data: searchResults, isPending: isSearchLoading } = useGetSearchPosts(
+    feedsClient,
+    debouncedSearchValue
+  );
+
+  // Show search results only when there's data from the response
+  const shouldShowSearchResults =
+    searchValue.trim().length > 0 &&
+    searchResults &&
+    searchResults.activities &&
+    searchResults.activities.length > 0;
 
   // Show "End of Posts" message only if:
   // - Not searching AND
   // - Feed has been loaded AND
   // - No activities (posts) in the feed
   const shouldShowEndOfPosts =
-    !shouldShowSearchResults &&
+    searchValue.trim().length === 0 &&
     !isPostLoading &&
     posts &&
     (!posts.activities || posts.activities.length === 0);
@@ -66,8 +92,18 @@ const Explore = () => {
         </div>
       </div>
       <div className="flex flex-wrap gap-9 w-full max-w-5xl">
-        {shouldShowSearchResults ? (
-          <SearchResults />
+        {searchValue.trim().length > 0 ? (
+          isSearchLoading ? (
+            <p className="text-light-4 mt-10 text-center w-full">
+              Searching...
+            </p>
+          ) : shouldShowSearchResults ? (
+            <SearchResults searchResults={searchResults.activities} />
+          ) : (
+            <p className="text-light-4 mt-10 text-center w-full">
+              No posts found
+            </p>
+          )
         ) : shouldShowEndOfPosts ? (
           <p className="text-light-4 mt-10 text-center w-full ">End of Posts</p>
         ) : isPostLoading ? (

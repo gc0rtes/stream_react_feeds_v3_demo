@@ -17,6 +17,7 @@ import {
   getPostById,
   removeBookmark,
   removeLike,
+  getSearchPosts,
   UpdateActivityPartial,
 } from "../stream/api";
 
@@ -70,6 +71,18 @@ export const useGetPostById = (
     queryKey: [QUERY_KEYS.GET_POST_BY_ID, activity_id],
     queryFn: () => getPostById(feedsClient, activity_id),
     enabled: !!activity_id, //we want to fetch the post only if the activity_id is another id
+  });
+};
+
+/** SEARCH POSTS */
+export const useGetSearchPosts = (
+  feedsClient: FeedsClient | null,
+  searchQuery: string
+) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.SEARCH_POSTS, searchQuery],
+    queryFn: () => getSearchPosts(feedsClient!, searchQuery),
+    enabled: !!feedsClient && searchQuery.trim().length > 0,
   });
 };
 
