@@ -5,7 +5,7 @@ const Bottombar = () => {
   const { pathname } = useLocation();
 
   return (
-    <nav className="z-50 flex justify-between items-center w-full sticky bottom-0 rounded-t-[20px] bg-dark-2 px-5 py-4 md:hidden">
+    <nav className="z-50 flex justify-around items-center w-full sticky bottom-0 rounded-t-[20px] bg-dark-2 px-2 py-3 md:hidden">
       {bottombarLinks.map((link) => {
         const isActive = pathname === link.route;
 
@@ -15,7 +15,7 @@ const Bottombar = () => {
             key={link.label}
             className={`${
               isActive && "bg-primary-500 rounded-[10px]"
-            } flex-center gap-1 p-4 flex-col transition`}
+            } flex-center gap-1 p-2 flex-col transition flex-1`}
           >
             <img
               src={link.imgURL}
