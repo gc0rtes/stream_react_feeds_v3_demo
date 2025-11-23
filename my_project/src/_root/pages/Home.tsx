@@ -5,14 +5,15 @@ import { Loader } from "lucide-react";
 import PostCard from "@/components/shared/PostCard";
 
 const Home = () => {
-  const { user, feedsClient } = useUserContext();
+  const { user, feedsClient, isConnected } = useUserContext();
   const user_id = user?.id;
 
-  const {
-    data: posts,
-    isPending: isPostLoading,
-    isError: isPostError,
-  } = useGetRecentPosts(feedsClient!, "user", user_id!); //The non-null assertions (!) tell TypeScript that we're confident these values won't actually be null when used by the hook.
+  const { data: posts, isPending: isPostLoading } = useGetRecentPosts(
+    feedsClient,
+    "user",
+    user_id || "",
+    isConnected && !!user_id
+  );
   console.log("posts>>>", posts);
 
   return (

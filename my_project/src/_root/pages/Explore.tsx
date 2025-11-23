@@ -1,10 +1,11 @@
+import { useInView } from "react-intersection-observer";
 import GridPostList from "@/components/shared/GridPostList";
 import SearchResults from "@/components/shared/SearchResults";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUserContext } from "@/context/AuthContext";
 import {
-  useGetRecentPosts,
+  useGetInfinitePosts,
   useGetSearchPosts,
 } from "@/lib/react-query/queriesAndMutations";
 import Loader from "@/components/shared/Loader";
@@ -13,56 +14,59 @@ import useDebounce from "@/hooks/useDebounce";
 
 const Explore = () => {
   const [searchValue, setSearchValue] = useState("");
+  const { ref, inView } = useInView();
 
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  const { user, feedsClient } = useUserContext();
+  const { user, feedsClient, isConnected } = useUserContext();
   const user_id = user?.id;
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-  };
-
-  /* FORYOU FEEDS*/
-  const { data: posts, isPending: isPostLoading } = useGetRecentPosts(
-    feedsClient!,
-    "foryou",
-    user_id!
-  ); //The non-null assertions (!) tell TypeScript that we're confident these values won't actually be null when used by the hook.
-  console.log("posts>>>", posts);
-
   /* SEARCH */
-  // Debounce search - update debounced value after user stops typing for 500ms
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedSearchValue(searchValue.trim());
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchValue]);
-
-  // Search query - only runs when debouncedSearchValue has content
   const { data: searchResults, isPending: isSearchLoading } = useGetSearchPosts(
     feedsClient,
     debouncedSearchValue
   );
+  console.log("searchResults>>>", searchResults);
 
-  // Show search results only when there's data from the response
-  const shouldShowSearchResults =
-    searchValue.trim().length > 0 &&
-    searchResults &&
-    searchResults.activities &&
-    searchResults.activities.length > 0;
+  /* FORYOU FEEDS*/
+  const {
+    data: posts,
+    isPending: isPostLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+  } = useGetInfinitePosts(
+    feedsClient,
+    "foryou",
+    user_id || "",
+    isConnected && !!user_id
+  );
+  console.log("posts>>>", posts);
 
-  // Show "End of Posts" message only if:
-  // - Not searching AND
-  // - Feed has been loaded AND
-  // - No activities (posts) in the feed
-  const shouldShowEndOfPosts =
-    searchValue.trim().length === 0 &&
-    !isPostLoading &&
-    posts &&
-    (!posts.activities || posts.activities.length === 0);
+  useEffect(() => {
+    if (inView && !searchValue) {
+      fetchNextPage();
+    }
+  }, [inView, searchValue]);
+
+  console.log("posts>>>", posts);
+
+  if (!posts)
+    return (
+      <div className="flex-center w-full h-full">
+        <Loader />
+      </div>
+    );
+
+  const shouldShowSearchResults = searchValue.trim() !== "";
+  const shouldShowPosts =
+    !shouldShowSearchResults &&
+    posts.pages.every((item) => item.activities.length === 0);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
 
   return (
     <div className="flex flex-col flex-1 items-center overflow-scroll py-10 px-5 md:p-14 custom-scrollbar">
@@ -97,31 +101,24 @@ const Explore = () => {
         </div>
       </div>
       <div className="flex flex-wrap gap-9 w-full max-w-5xl">
-        {searchValue.trim().length > 0 ? (
-          isSearchLoading ? (
-            <p className="text-light-4 mt-10 text-center w-full">
-              Searching...
-            </p>
-          ) : shouldShowSearchResults ? (
-            <SearchResults searchResults={searchResults.activities} />
-          ) : (
-            <p className="text-light-4 mt-10 text-center w-full">
-              No posts found
-            </p>
-          )
-        ) : shouldShowEndOfPosts ? (
-          <p className="text-light-4 mt-10 text-center w-full ">End of Posts</p>
-        ) : isPostLoading ? (
-          <>
-            <Loader />
-            <p className="text-light-4 mt-10 text-center w-full">Loading...</p>
-          </>
+        {shouldShowSearchResults ? (
+          <SearchResults
+            isSearchFetching={isSearchLoading}
+            searchedPosts={searchResults}
+          />
+        ) : shouldShowPosts ? (
+          <p className="text-light-4 mt-10 text-center w-full">End of posts</p>
         ) : (
-          posts?.activities?.map((activity) => (
-            <GridPostList key={activity.id} post={activity} />
+          posts.pages.map((item, index) => (
+            <GridPostList key={`page-${index}`} posts={item.activities} />
           ))
         )}
       </div>
+      {hasNextPage && !searchValue && (
+        <div ref={ref} className="mt-10">
+          <Loader />
+        </div>
+      )}
     </div>
   );
 };

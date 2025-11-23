@@ -56,32 +56,35 @@ export const useSignOutAccount = () => {
 
 /** GET RECENT POSTS */
 export const useGetRecentPosts = (
-  feedsClient: FeedsClient,
+  feedsClient: FeedsClient | null,
   feedgroup: string,
-  feed_id: string
+  feed_id: string,
+  enabled: boolean = true
 ) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
-    queryFn: () => getFeedActivities(feedsClient, feedgroup, feed_id),
-    // enabled: !!feedsClient && !!feedgroup && !!feed_id,
+    queryKey: [QUERY_KEYS.GET_RECENT_POSTS, feedgroup, feed_id],
+    queryFn: () => getFeedActivities(feedsClient!, feedgroup, feed_id),
+    enabled: enabled && !!feedsClient && !!feedgroup && !!feed_id,
   });
 };
 
 /** GET INFINITE POSTS */
 export const useGetInfinitePosts = (
-  feedsClient: FeedsClient,
+  feedsClient: FeedsClient | null,
   feedgroup: string,
-  feed_id: string
+  feed_id: string,
+  enabled: boolean = true
 ) => {
   return useInfiniteQuery({
     queryKey: [QUERY_KEYS.GET_INFINITE_POSTS, feedgroup, feed_id],
     queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-      getFeedActivities(feedsClient, feedgroup, feed_id, pageParam),
+      getFeedActivities(feedsClient!, feedgroup, feed_id, pageParam),
     initialPageParam: undefined as string | undefined, // First page doesn't need a cursor
     getNextPageParam: (lastPage) => {
       // Return the next cursor if it exists, otherwise return undefined to stop pagination
       return lastPage?.next || undefined;
     },
+    enabled: enabled && !!feedsClient && !!feedgroup && !!feed_id,
   });
 };
 
