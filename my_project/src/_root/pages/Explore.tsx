@@ -16,7 +16,7 @@ const Explore = () => {
   const [searchValue, setSearchValue] = useState("");
   const { ref, inView } = useInView();
 
-  const debouncedSearchValue = useDebounce(searchValue, 500);
+  const debouncedSearchValue = useDebounce(searchValue, 800);
 
   const { user, feedsClient, isConnected } = useUserContext();
   const user_id = user?.id;
@@ -103,8 +103,8 @@ const Explore = () => {
       <div className="flex flex-wrap gap-9 w-full max-w-5xl">
         {shouldShowSearchResults ? (
           <SearchResults
-            isSearchFetching={isSearchLoading}
-            searchedPosts={searchResults}
+            isSearchLoading={isSearchLoading}
+            searchResults={searchResults}
           />
         ) : shouldShowPosts ? (
           <p className="text-light-4 mt-10 text-center w-full">End of posts</p>
@@ -114,6 +114,11 @@ const Explore = () => {
           ))
         )}
       </div>
+      {/* It renders A <div> with ref={ref} 
+      (from useInView, line 17) to detect when it enters the viewport. 
+       This is a way to know when the use has reached the bottom of the page 
+       and we need to fetch the next page in the useEffect.
+       */}
       {hasNextPage && !searchValue && (
         <div ref={ref} className="mt-10">
           <Loader />

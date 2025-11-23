@@ -106,10 +106,10 @@ export const useGetSearchPosts = (
   searchQuery: string
 ) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.SEARCH_POSTS],
+    queryKey: [QUERY_KEYS.SEARCH_POSTS, searchQuery],
     queryFn: () => getSearchPosts(feedsClient!, searchQuery),
     //Uses enabled to refetch when the search term changes
-    enabled: !!searchQuery,
+    enabled: !!feedsClient && !!searchQuery,
   });
 };
 
@@ -208,9 +208,7 @@ export const useLikePost = () => {
     mutationFn: (params: { feedsClient: FeedsClient; activity_id: string }) =>
       addLike(params.feedsClient, params.activity_id),
 
-    // We are storing everything in the cache so the next time you click
-    // on the GET_POST_BY_ID query, it will be refetched and
-    // you will see the new like count
+    // You need to invalidate the corresponding view whenever you add/remove a like
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_POST_BY_ID, variables.activity_id],
@@ -226,6 +224,9 @@ export const useLikePost = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.SEARCH_POSTS],
       });
     },
   });
@@ -256,6 +257,9 @@ export const useDeleteLike = () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
       });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.SEARCH_POSTS],
+      });
     },
   });
 };
@@ -282,6 +286,9 @@ export const useSavePost = () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
       });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.SEARCH_POSTS],
+      });
     },
   });
 };
@@ -306,6 +313,9 @@ export const useDeleteSavedPost = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.SEARCH_POSTS],
       });
     },
   });
