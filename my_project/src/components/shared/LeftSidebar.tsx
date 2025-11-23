@@ -97,20 +97,21 @@ const LeftSidebar = () => {
           })}
         </ul>
       </div>
-
-      <Button
-        variant="ghost"
-        className="shad-button_ghost"
-        onClick={handleSignOut}
-      >
-        <img
-          src="/assets/icons/logout.svg"
-          alt="logout"
-          width={20}
-          height={20}
-        />
-        <p className="small-medium lg:base-medium ">Logout</p>
-      </Button>
+      <div>
+        <Button
+          variant="ghost"
+          className="shad-button_ghost"
+          onClick={handleSignOut}
+        >
+          <img
+            src="/assets/icons/logout.svg"
+            alt="logout"
+            width={20}
+            height={20}
+          />
+          <p className="small-medium lg:base-medium ">Logout</p>
+        </Button>
+      </div>
     </nav>
   );
 };
