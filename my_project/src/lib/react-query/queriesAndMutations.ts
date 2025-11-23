@@ -25,6 +25,9 @@ import {
   getSearchPosts,
   UpdateActivityPartial,
   getBookmarkedActivities,
+  getFollowSuggestions,
+  followUser,
+  unfollowUser,
 } from "../stream/api";
 
 import { QUERY_KEYS } from "./queryKeys";
@@ -341,6 +344,85 @@ export const useDeleteSavedPost = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_BOOKMARKED_ACTIVITIES],
+      });
+    },
+  });
+};
+
+/* FOLLOW MANAGEMENT */
+
+/** GET FOLLOW SUGGESTIONS */
+export const useGetFollowSuggestions = (
+  feedsClient: FeedsClient | null,
+  limit: number = 10,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_FOLLOW_SUGGESTIONS, limit],
+    queryFn: () => getFollowSuggestions(feedsClient!, limit),
+    enabled: enabled && !!feedsClient,
+  });
+};
+
+/** FOLLOW USER */
+type FollowUserParams = {
+  feedsClient: FeedsClient;
+  sourceFeedGroup: string;
+  sourceFeedId: string;
+  targetFeedId: string;
+};
+
+export const useFollowUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: FollowUserParams) =>
+      followUser(
+        params.feedsClient,
+        params.sourceFeedGroup,
+        params.sourceFeedId,
+        params.targetFeedId
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_FOLLOW_SUGGESTIONS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_INFINITE_POSTS],
+      });
+    },
+  });
+};
+
+/** UNFOLLOW USER */
+type UnfollowUserParams = {
+  feedsClient: FeedsClient;
+  sourceFeedGroup: string;
+  sourceFeedId: string;
+  targetFeedId: string;
+};
+
+export const useUnfollowUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: UnfollowUserParams) =>
+      unfollowUser(
+        params.feedsClient,
+        params.sourceFeedGroup,
+        params.sourceFeedId,
+        params.targetFeedId
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_FOLLOW_SUGGESTIONS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_INFINITE_POSTS],
       });
     },
   });

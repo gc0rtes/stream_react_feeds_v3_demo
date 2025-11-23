@@ -20,4 +20,7 @@ export const QUERY_KEYS = {
 
   //  SEARCH KEYS
   SEARCH_POSTS: "getSearchPosts",
+
+  // FOLLOW KEYS
+  GET_FOLLOW_SUGGESTIONS: "getFollowSuggestions",
 } as const;

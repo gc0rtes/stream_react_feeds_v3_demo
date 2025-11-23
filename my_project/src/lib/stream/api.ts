@@ -425,3 +425,70 @@ export async function pinActivity(
     console.error("Error pinning activity:", error);
   }
 }
+
+//Get follow suggestions
+export async function getFollowSuggestions(
+  feedsClient: FeedsClient,
+  limit: number = 10
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const suggestions = await feedsClient.getFollowSuggestions({
+      feed_group_id: "user",
+      limit: limit,
+    });
+    console.log("getFollowSuggestions>>>", suggestions);
+    return suggestions;
+  } catch (error) {
+    console.error("Error getting follow suggestions:", error);
+    throw error;
+  }
+}
+
+//Follow a user
+export async function followUser(
+  feedsClient: FeedsClient,
+  sourceFeedGroup: string,
+  sourceFeedId: string,
+  targetFeedId: string
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const timeline = feedsClient.feed(sourceFeedGroup, sourceFeedId);
+    await timeline.getOrCreate();
+    const followResponse = await timeline.follow(`user:${targetFeedId}`);
+    console.log("followResponse>>>", followResponse);
+    return followResponse;
+  } catch (error) {
+    console.error("Error following user:", error);
+    throw error;
+  }
+}
+
+//Unfollow a user
+export async function unfollowUser(
+  feedsClient: FeedsClient,
+  sourceFeedGroup: string,
+  sourceFeedId: string,
+  targetFeedId: string
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const timeline = feedsClient.feed(sourceFeedGroup, sourceFeedId);
+    const unfollowResponse = await timeline.unfollow(`user:${targetFeedId}`);
+    console.log("unfollowResponse>>>", unfollowResponse);
+    return unfollowResponse;
+  } catch (error) {
+    console.error("Error unfollowing user:", error);
+    throw error;
+  }
+}
