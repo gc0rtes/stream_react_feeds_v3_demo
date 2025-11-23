@@ -308,6 +308,9 @@ export const useSavePost = () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.SEARCH_POSTS],
       });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_BOOKMARKED_ACTIVITIES],
+      });
     },
   });
 };
@@ -335,6 +338,9 @@ export const useDeleteSavedPost = () => {
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.SEARCH_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_BOOKMARKED_ACTIVITIES],
       });
     },
   });

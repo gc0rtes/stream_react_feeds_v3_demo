@@ -5,7 +5,7 @@ const Bottombar = () => {
   const { pathname } = useLocation();
 
   return (
-    <nav className="bottom-bar">
+    <nav className="z-50 flex justify-between items-center w-full sticky bottom-0 rounded-t-[20px] bg-dark-2 px-5 py-4 md:hidden">
       {bottombarLinks.map((link) => {
         const isActive = pathname === link.route;
 

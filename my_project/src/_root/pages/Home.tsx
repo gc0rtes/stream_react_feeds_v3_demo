@@ -22,7 +22,7 @@ const Home = () => {
         <div className="max-w-screen-sm flex flex-col items-center w-full gap-6 md:gap-9">
           <h2 className="h3-bold md:h2-bold text-left w-full">Home</h2>
           {isPostLoading && !posts ? (
-            <div className="border border-red-400 flex-center items-center justify-center w-full h-full">
+            <div className=" flex-center items-center justify-center w-full h-full">
               <Loader />
             </div>
           ) : (
