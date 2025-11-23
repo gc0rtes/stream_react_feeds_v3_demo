@@ -31,11 +31,8 @@ const Explore = () => {
   /* FORYOU FEEDS*/
   const {
     data: posts,
-    isPending: isPostLoading,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
-    isFetching,
   } = useGetInfinitePosts(
     feedsClient,
     "foryou",

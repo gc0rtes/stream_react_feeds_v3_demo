@@ -1,6 +1,20 @@
 import { FeedsClient } from "@stream-io/feeds-client";
 import type { IUploadedFile, INewPost } from "@/types";
 
+//get bookmarked activities
+export async function getBookmarkedActivities(
+  feedsClient: FeedsClient,
+  next?: string
+) {
+  const response = await feedsClient.queryBookmarks({
+    ...(next && { next }), // Include next cursor if provided
+    limit: 10,
+    sort: [{ field: "created_at", direction: -1 }],
+  });
+  console.log("getBookmarkedActivities>>>", response);
+  return response;
+}
+
 // deleteImage
 export async function deleteImage(feedsClient: FeedsClient, url: string) {
   try {

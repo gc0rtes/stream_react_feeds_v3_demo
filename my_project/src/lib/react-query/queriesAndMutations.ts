@@ -24,6 +24,7 @@ import {
   removeLike,
   getSearchPosts,
   UpdateActivityPartial,
+  getBookmarkedActivities,
 } from "../stream/api";
 
 import { QUERY_KEYS } from "./queryKeys";
@@ -53,6 +54,24 @@ export const useSignOutAccount = () => {
 };
 
 /* ACTIVITY MANAGEMENT */
+
+/** GET BOOKMARKED ACTIVITIES */
+export const useGetBookmarkedActivities = (
+  feedsClient: FeedsClient | null,
+  enabled: boolean = true
+) => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.GET_BOOKMARKED_ACTIVITIES],
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      getBookmarkedActivities(feedsClient!, pageParam),
+    initialPageParam: undefined as string | undefined, // First page doesn't need a cursor
+    getNextPageParam: (lastPage) => {
+      // Return the next cursor if it exists, otherwise return undefined to stop pagination
+      return lastPage?.next || undefined;
+    },
+    enabled: enabled && !!feedsClient,
+  });
+};
 
 /** GET RECENT POSTS */
 export const useGetRecentPosts = (
