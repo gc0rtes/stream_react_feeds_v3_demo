@@ -1,6 +1,7 @@
 import { useUserContext } from "@/context/AuthContext";
 import { useGetRecentPosts } from "@/lib/react-query/queriesAndMutations";
 import Loader from "@/components/shared/Loader";
+import RightSidebar from "@/components/shared/RightSidebar";
 
 import PostCard from "@/components/shared/PostCard";
 
@@ -10,7 +11,7 @@ const Home = () => {
 
   const { data: posts, isPending: isPostLoading } = useGetRecentPosts(
     feedsClient,
-    "user",
+    "timeline",
     user_id || "",
     isConnected && !!user_id
   );
@@ -34,6 +35,7 @@ const Home = () => {
           )}
         </div>
       </div>
+      <RightSidebar />
     </div>
   );
 };
