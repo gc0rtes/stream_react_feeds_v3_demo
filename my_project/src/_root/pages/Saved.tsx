@@ -1,22 +1,44 @@
 import GridPostList from "@/components/shared/GridPostList";
 import Loader from "@/components/shared/Loader";
 import { useUserContext } from "@/context/AuthContext";
-import { useGetBookmarkedActivities } from "@/lib/react-query/queriesAndMutations";
+import { getBookmarkedActivities } from "@/lib/stream/api";
+import { useEffect, useState } from "react";
 
 const Saved = () => {
   const { feedsClient } = useUserContext();
-  const { data: bookmarksData, isPending: isLoading } =
-    useGetBookmarkedActivities(feedsClient);
-  console.log("Bookmarked activities>>>", bookmarksData);
-  if (isLoading) return <Loader />;
+  const [activities, setActivities] = useState<unknown[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Extract activities from bookmarks: each bookmark has an activity property
-  const activities =
-    bookmarksData?.pages.flatMap((page) =>
-      page.bookmarks.map((bookmark) => bookmark.activity)
-    ) || [];
+  // Load initial bookmarks when feedsClient is available
+  useEffect(() => {
+    if (!feedsClient) return;
 
-  if (!bookmarksData || activities.length === 0)
+    // Reset state when feedsClient changes to prevent duplicates
+    setActivities([]);
+
+    const loadBookmarks = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getBookmarkedActivities(feedsClient, undefined);
+        if (response) {
+          const newActivities = response.bookmarks.map(
+            (bookmark: { activity: unknown }) => bookmark.activity
+          );
+          setActivities(newActivities);
+        }
+      } catch (error) {
+        console.error("Error loading bookmarks:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBookmarks();
+  }, [feedsClient]);
+
+  if (isLoading && activities.length === 0) return <Loader />;
+
+  if (activities.length === 0)
     return <p className="text-light-4">No saved posts</p>;
 
   return (

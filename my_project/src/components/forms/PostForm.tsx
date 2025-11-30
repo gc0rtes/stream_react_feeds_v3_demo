@@ -20,14 +20,10 @@ import { Controller, useForm } from "react-hook-form";
 import { PostValidation } from "@/lib/validation";
 import FileUploader from "../shared/FileUploader";
 import { Input } from "../ui/input";
+import { useState } from "react";
 
-import {
-  useUpdatePost,
-  useCreatePost,
-} from "@/lib/react-query/queriesAndMutations";
-
+import { AddActivity, UpdateActivityPartial } from "@/lib/stream/api";
 import { useUserContext } from "@/context/AuthContext";
-
 import type { INewPost } from "@/types";
 
 type PostFormProps = {
@@ -42,9 +38,8 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
   const user_id = user?.id;
 
   const navigate = useNavigate();
-
-  const { mutateAsync: createPost, isPending: isCreating } = useCreatePost();
-  const { mutateAsync: updatePost, isPending: isUpdating } = useUpdatePost();
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const form = useForm<z.infer<typeof PostValidation>>({
     resolver: zodResolver(PostValidation),
@@ -74,38 +69,42 @@ const PostForm = ({ post, action, activityId }: PostFormProps) => {
           toast.error("Activity ID is missing. Cannot update post.");
           return;
         }
-        //update the stream post using React Query mutation
-        await updatePost({
-          feedsClient,
-          activity_id: activityId,
-          text: data.text,
-          uploadedFiles: data.file,
-          custom_location: data.custom_location,
-          interest_tags: data.interest_tags,
-        });
+        setIsUpdating(true);
+        //update the stream post - state updates automatically via WebSocket
+        await UpdateActivityPartial(
+          feedsClient!,
+          activityId,
+          data.text,
+          data.file,
+          data.custom_location,
+          data.interest_tags
+        );
         toast.success(`${action} post successful!`);
-
+        setIsUpdating(false);
         return navigate(`/post/${activityId}`);
       }
 
       // ACTION = CREATE
-      //create a new stream post.
-      // TODO: change dynamically according to the app architecture
-      await createPost({
-        feedsClient,
-        feedgroup: "user", //feed group
-        feed_id: user_id!, //feed id
-        text: data.text,
-        uploadedFiles: data.file,
-        custom_location: data.custom_location,
-        interest_tags: data.interest_tags,
-      });
+      //create a new stream post - state updates automatically via WebSocket
+      setIsCreating(true);
+      await AddActivity(
+        feedsClient!,
+        "user", //feed group
+        user_id!, //feed id
+        data.text,
+        data.file,
+        data.custom_location,
+        data.interest_tags
+      );
 
       toast.success(`${action} post successful!`);
+      setIsCreating(false);
       navigate("/");
     } catch (error) {
       console.error("Error creating/updating post:", error);
       toast.error(`${action} post failed. Please try again.`);
+      setIsCreating(false);
+      setIsUpdating(false);
     }
   };
 

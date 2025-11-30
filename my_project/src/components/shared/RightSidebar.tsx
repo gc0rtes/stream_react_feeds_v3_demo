@@ -1,63 +1,67 @@
 import { useUserContext } from "@/context/AuthContext";
 import {
-  useGetFollowSuggestions,
-  useFollowUser,
-  useUnfollowUser,
-} from "@/lib/react-query/queriesAndMutations";
+  getFollowSuggestions,
+  followUser,
+  unfollowUser,
+} from "@/lib/stream/api";
 import { Button } from "../ui/button";
 import Loader from "./Loader";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const RightSidebar = () => {
   const { user, feedsClient, isConnected } = useUserContext();
   const [followedUsers, setFollowedUsers] = useState<Set<string>>(new Set());
+  const [suggestions, setSuggestions] = useState<any>(null);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isUnfollowing, setIsUnfollowing] = useState(false);
 
-  const { data: suggestions, isPending: isLoadingSuggestions } =
-    useGetFollowSuggestions(feedsClient, 10, isConnected && !!user.id);
-  console.log("suggestions>>>", suggestions);
+  useEffect(() => {
+    if (!feedsClient || !user.id || !isConnected) return;
 
-  const { mutate: followUser, isPending: isFollowing } = useFollowUser();
-  const { mutate: unfollowUser, isPending: isUnfollowing } = useUnfollowUser();
+    setIsLoadingSuggestions(true);
+    getFollowSuggestions(feedsClient, 10)
+      .then((data) => {
+        setSuggestions(data);
+        setIsLoadingSuggestions(false);
+      })
+      .catch((error) => {
+        console.error("Error loading follow suggestions:", error);
+        setIsLoadingSuggestions(false);
+      });
+  }, [feedsClient, user.id, isConnected]);
 
-  const handleFollow = (targetFeedId: string) => {
+  const handleFollow = async (targetFeedId: string) => {
     if (!feedsClient || !user.id) return;
 
     const isCurrentlyFollowed = followedUsers.has(targetFeedId);
 
     if (isCurrentlyFollowed) {
       // Unfollow
-      unfollowUser(
-        {
-          feedsClient,
-          sourceFeedGroup: "timeline",
-          sourceFeedId: user.id,
-          targetFeedId,
-        },
-        {
-          onSuccess: () => {
-            setFollowedUsers((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(targetFeedId);
-              return newSet;
-            });
-          },
-        }
-      );
+      setIsUnfollowing(true);
+      try {
+        await unfollowUser(feedsClient, "timeline", user.id, targetFeedId);
+        setFollowedUsers((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(targetFeedId);
+          return newSet;
+        });
+      } catch (error) {
+        console.error("Error unfollowing user:", error);
+      } finally {
+        setIsUnfollowing(false);
+      }
     } else {
       // Follow
-      followUser(
-        {
-          feedsClient,
-          sourceFeedGroup: "timeline",
-          sourceFeedId: user.id,
-          targetFeedId,
-        },
-        {
-          onSuccess: () => {
-            setFollowedUsers((prev) => new Set(prev).add(targetFeedId));
-          },
-        }
-      );
+      setIsFollowing(true);
+      try {
+        await followUser(feedsClient, "timeline", user.id, targetFeedId);
+        setFollowedUsers((prev) => new Set(prev).add(targetFeedId));
+      } catch (error) {
+        console.error("Error following user:", error);
+      } finally {
+        setIsFollowing(false);
+      }
     }
   };
 
@@ -82,7 +86,7 @@ const RightSidebar = () => {
   return (
     <aside className="hidden xl:flex px-6 py-10 flex-col min-w-[300px] bg-dark-2">
       <div className="flex flex-col gap-6">
-        <h2 className="h3-bold">Who to Follow</h2>
+        <h2 className="h3-bold">Popular </h2>
 
         {isLoadingSuggestions ? (
           <div className="flex-center items-center justify-center w-full h-full py-10">

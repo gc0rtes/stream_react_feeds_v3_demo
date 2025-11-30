@@ -1,22 +1,34 @@
 import { useUserContext } from "@/context/AuthContext";
-import { useGetPostById } from "@/lib/react-query/queriesAndMutations";
 import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Loader from "@/components/shared/Loader";
 import PostStats from "@/components/PostStats";
 import ImageCarousel from "@/components/shared/ImageCarousel";
 import PostHeader from "@/components/shared/PostHeader";
 import PostContent from "@/components/shared/PostContent";
 import PostOwnerActions from "@/components/shared/PostOwnerActions";
+import { getPostById } from "@/lib/stream/api";
 
 const PostDetails = () => {
-  const { user } = useUserContext();
+  const { user, feedsClient } = useUserContext();
   const { id } = useParams();
-  const { feedsClient } = useUserContext();
-  const { data: activity, isLoading: isLoadingPost } = useGetPostById(
-    feedsClient!,
-    id || ""
-  );
-  console.log("useGetPostById PostDetails>>>", activity);
+  const [activity, setActivity] = useState<any>(null);
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
+
+  useEffect(() => {
+    if (!feedsClient || !id) return;
+
+    setIsLoadingPost(true);
+    getPostById(feedsClient, id)
+      .then((post) => {
+        setActivity(post);
+        setIsLoadingPost(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching post:", error);
+        setIsLoadingPost(false);
+      });
+  }, [feedsClient, id]);
 
   const isOwner = user?.id === activity?.user.id;
 

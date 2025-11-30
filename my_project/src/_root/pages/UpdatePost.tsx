@@ -1,21 +1,30 @@
 import PostForm from "@/components/forms/PostForm";
 import Loader from "@/components/shared/Loader";
 import { useUserContext } from "@/context/AuthContext";
-import { useGetPostById } from "@/lib/react-query/queriesAndMutations";
-import { transformActivityToPost } from "@/lib/stream/api";
+import { getPostById, transformActivityToPost } from "@/lib/stream/api";
 import { useParams } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 
 const UpdatePost = () => {
   const { id } = useParams();
   const { feedsClient } = useUserContext();
+  const [activity, setActivity] = useState<any>(null);
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
 
-  //Pass the cached activity from the query to the PostForm component
-  const { data: activity, isLoading: isLoadingPost } = useGetPostById(
-    feedsClient!,
-    id || ""
-  );
-  console.log("post>>>", activity);
+  useEffect(() => {
+    if (!feedsClient || !id) return;
+
+    setIsLoadingPost(true);
+    getPostById(feedsClient, id)
+      .then((post) => {
+        setActivity(post);
+        setIsLoadingPost(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching post:", error);
+        setIsLoadingPost(false);
+      });
+  }, [feedsClient, id]);
 
   // Transform the Stream activity to INewPost format
   // to pass to the PostForm component as the post prop

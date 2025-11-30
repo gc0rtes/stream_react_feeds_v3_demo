@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useUserContext } from "@/context/AuthContext";
 import {
-  useDeleteSavedPost,
-  useLikePost,
-  useSavePost,
-  useDeleteLike,
-} from "@/lib/react-query/queriesAndMutations";
+  addLike,
+  removeLike,
+  bookmarkActivity,
+  removeBookmark,
+} from "@/lib/stream/api";
 import Loader from "./shared/Loader";
 
 type PostStatsProps = {
@@ -22,6 +22,10 @@ const PostStats = ({ post }: PostStatsProps) => {
 
   const [isLiked, setIsLiked] = useState<boolean>(isLikedStream);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(isBookmarkedStream);
+  const [isLikingPost, setIsLikingPost] = useState(false);
+  const [isSavingPost, setIsSavingPost] = useState(false);
+  const [isDeletingSavedPost, setIsDeletingSavedPost] = useState(false);
+  const [isDeletingLike, setIsDeletingLike] = useState(false);
 
   // Sync local state with post prop when it changes (e.g., when navigating between screens)
   useEffect(() => {
@@ -29,48 +33,62 @@ const PostStats = ({ post }: PostStatsProps) => {
     setIsBookmarked(isBookmarkedStream);
   }, [isLikedStream, isBookmarkedStream]);
 
-  const { mutate: likePost, isPending: isLikingPost } = useLikePost();
-  const { mutate: savePost, isPending: isSavingPost } = useSavePost();
-  const { mutate: deleteSavedPost, isPending: isDeletingSavedPost } =
-    useDeleteSavedPost();
-  const { mutate: deleteLike, isPending: isDeletingLike } = useDeleteLike();
-
   const { feedsClient } = useUserContext();
 
   const reactionCountStream = post.reaction_count;
 
-  //handle the like and bookmark actions (check video at 4:21)
+  //handle the like and bookmark actions
+  // Note: State updates automatically via WebSocket, so we just need to call the API
 
-  const handleAddBookmark = () => {
+  const handleAddBookmark = async () => {
+    if (!feedsClient) return;
+
     if (isBookmarked) {
-      setIsBookmarked(false);
-      deleteSavedPost({
-        feedsClient: feedsClient!,
-        activity_id: post.id,
-      });
+      setIsDeletingSavedPost(true);
+      try {
+        await removeBookmark(feedsClient, post.id);
+        setIsBookmarked(false);
+      } catch (error) {
+        console.error("Error removing bookmark:", error);
+      } finally {
+        setIsDeletingSavedPost(false);
+      }
     } else {
-      setIsBookmarked(true);
-      savePost({
-        feedsClient: feedsClient!,
-        activity_id: post.id,
-      });
+      setIsSavingPost(true);
+      try {
+        await bookmarkActivity(feedsClient, post.id);
+        setIsBookmarked(true);
+      } catch (error) {
+        console.error("Error adding bookmark:", error);
+      } finally {
+        setIsSavingPost(false);
+      }
     }
   };
 
-  const handleAddLike = () => {
+  const handleAddLike = async () => {
+    if (!feedsClient) return;
+
     if (isLiked) {
-      setIsLiked(false);
-      deleteLike({
-        feedsClient: feedsClient!,
-        activity_id: post.id,
-        type: "like",
-      });
+      setIsDeletingLike(true);
+      try {
+        await removeLike(feedsClient, post.id, "like");
+        setIsLiked(false);
+      } catch (error) {
+        console.error("Error removing like:", error);
+      } finally {
+        setIsDeletingLike(false);
+      }
     } else {
-      setIsLiked(true);
-      likePost({
-        feedsClient: feedsClient!,
-        activity_id: post.id,
-      });
+      setIsLikingPost(true);
+      try {
+        await addLike(feedsClient, post.id);
+        setIsLiked(true);
+      } catch (error) {
+        console.error("Error adding like:", error);
+      } finally {
+        setIsLikingPost(false);
+      }
     }
   };
 

@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { formatDate } from "@/lib/utils";
+import { useClientConnectedUser } from "@stream-io/feeds-react-sdk";
 
 type PostHeaderProps = {
   post: any;
   avatarSize?: string;
   showActions?: boolean;
   actions?: React.ReactNode;
+  isFollowing?: boolean;
 };
 
 const PostHeader = ({
@@ -13,7 +15,11 @@ const PostHeader = ({
   avatarSize = "h-10 w-10 rounded-full lg:h-12 lg:w-12",
   showActions = false,
   actions,
+  isFollowing = false,
 }: PostHeaderProps) => {
+  const { user } = useClientConnectedUser();
+  console.log("stream user>>>", user);
+
   return (
     <div className="flex justify-between items-center w-full">
       <Link
