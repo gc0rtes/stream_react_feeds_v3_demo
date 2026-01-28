@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 import { setupCacheInspector } from "./cacheUtils";
 
 // Configure QueryClient with default options for better cache visibility
@@ -25,10 +25,6 @@ if (import.meta.env.DEV) {
 
 export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      {/* React Query DevTools - Only shows in development */}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
