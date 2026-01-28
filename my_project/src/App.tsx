@@ -5,6 +5,7 @@ import AuthLayout from "./_auth/AuthLayout";
 import RootLayout from "./_root/RootLayout";
 import {
   Home,
+  Community,
   Explore,
   AllUsers,
   Saved,
@@ -32,6 +33,7 @@ const App = () => {
         {/* private routes */}
         <Route element={<RootLayout />}>
           <Route index element={<Home />} />
+          <Route path="/community" element={<Community />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/all-users" element={<AllUsers />} />
           <Route path="/saved" element={<Saved />} />

@@ -4,7 +4,7 @@ import type { IUploadedFile, INewPost } from "@/types";
 //get bookmarked activities
 export async function getBookmarkedActivities(
   feedsClient: FeedsClient,
-  next?: string
+  next?: string,
 ) {
   const response = await feedsClient.queryBookmarks({
     ...(next && { next }), // Include next cursor if provided
@@ -44,7 +44,7 @@ export async function deleteFile(feedsClient: FeedsClient, url: string) {
 //delete activity
 export async function deleteActivity(
   feedsClient: FeedsClient,
-  activity_id: string
+  activity_id: string,
 ) {
   try {
     // First, get the activity to retrieve its attachments
@@ -84,7 +84,7 @@ export async function deleteActivity(
 //get Post by id
 export async function getPostById(
   feedsClient: FeedsClient,
-  activity_id: string
+  activity_id: string,
 ) {
   const result = await feedsClient.queryActivities({
     filter: {
@@ -129,7 +129,7 @@ export async function UpdateActivityPartial(
   text: string,
   uploadedFiles: IUploadedFile[],
   custom_location?: string,
-  interest_tags?: string
+  interest_tags?: string,
 ) {
   try {
     // Convert comma-separated tags string to array
@@ -206,17 +206,31 @@ export async function AddActivity(
   text: string,
   uploadedFiles: IUploadedFile[],
   custom_location?: string,
-  interest_tags?: string
+  interest_tags?: string,
 ) {
-  // Create a feed (or get its data if exists)
-  const feed = feedsClient.feed(feedgroup, feed_id);
+  // Instantiate the user feed
+  const userFeed = feedsClient.feed(feedgroup, feed_id);
 
-  //get or create the feed before adding the activity
-  const createdFeed = await feed.getOrCreate();
-  console.log("getOrCreateFeed>>>", createdFeed);
+  //instantiate the global:community feed
+  const communityFeed = feedsClient.feed("newGlobal", "community");
+
   try {
+    //get or create the newGlobal:community feed
+    const createdCommunityFeed = await communityFeed.getOrCreate();
+    console.log("getOrCreateCommunityFeed>>>", createdCommunityFeed);
+
+    //get or create the feed before adding the activity
+    const createdUserFeed = await userFeed.getOrCreate();
+    console.log("getOrCreateUserFeed>>>", createdUserFeed);
+
     // Subscribe to WebSocket events for state updates
-    await feed.getOrCreate({ watch: true });
+    await userFeed.getOrCreate({ watch: true });
+    await communityFeed.getOrCreate({
+      watch: true,
+      data: {
+        visibility: "public",
+      },
+    });
 
     // Convert comma-separated tags string to array
     const tagsArray = interest_tags
@@ -258,8 +272,14 @@ export async function AddActivity(
       activityObject.interest_tags = tagsArray;
     }
 
-    //add activity to the feed
-    await feed.addActivity(activityObject);
+    // Add activity to multiple feeds in a single request
+    const response = await feedsClient.addActivity({
+      feeds: [`${feedgroup}:${feed_id}`, "newGlobal:community"],
+      ...activityObject,
+    });
+    console.log("Activity added to multiple feeds:", response);
+
+
   } catch (error) {
     console.error("Error adding activity:", error);
     throw error;
@@ -271,7 +291,7 @@ export async function getFeedActivities(
   feedsClient: FeedsClient,
   feedgroup: string,
   feed_id: string,
-  next?: string // Optional cursor for pagination
+  next?: string, // Optional cursor for pagination
 ) {
   const feed = feedsClient.feed(feedgroup, feed_id);
   const activities = await feed.getOrCreate({
@@ -284,7 +304,7 @@ export async function getFeedActivities(
 //search activities by query
 export async function getSearchPosts(
   feedsClient: FeedsClient,
-  searchQuery: string
+  searchQuery: string,
 ) {
   try {
     // Trim and split search query by spaces into individual words
@@ -344,7 +364,7 @@ export async function addLike(feedsClient: FeedsClient, activity_id: string) {
 export async function removeLike(
   feedsClient: FeedsClient,
   activity_id: string,
-  type: string
+  type: string,
 ) {
   try {
     if (!feedsClient) {
@@ -364,7 +384,7 @@ export async function removeLike(
 //Bookmark activity
 export async function bookmarkActivity(
   feedsClient: FeedsClient,
-  activity_id: string
+  activity_id: string,
 ) {
   try {
     if (!feedsClient) {
@@ -385,7 +405,7 @@ export async function bookmarkActivity(
 
 export async function removeBookmark(
   feedsClient: FeedsClient,
-  activity_id: string
+  activity_id: string,
 ) {
   try {
     if (!feedsClient) {
@@ -407,7 +427,7 @@ export async function pinActivity(
   feedsClient: FeedsClient,
   activity_id: string,
   feed_group: string,
-  feed_id: string
+  feed_id: string,
 ) {
   try {
     if (!feedsClient) {
@@ -429,7 +449,7 @@ export async function pinActivity(
 //Get follow suggestions
 export async function getFollowSuggestions(
   feedsClient: FeedsClient,
-  limit: number = 10
+  limit: number = 10,
 ) {
   try {
     if (!feedsClient) {
@@ -453,7 +473,7 @@ export async function followUser(
   feedsClient: FeedsClient,
   sourceFeedGroup: string,
   sourceFeedId: string,
-  targetFeedId: string
+  targetFeedId: string,
 ) {
   try {
     if (!feedsClient) {
@@ -476,7 +496,7 @@ export async function unfollowUser(
   feedsClient: FeedsClient,
   sourceFeedGroup: string,
   sourceFeedId: string,
-  targetFeedId: string
+  targetFeedId: string,
 ) {
   try {
     if (!feedsClient) {
@@ -497,7 +517,7 @@ export async function unfollowUser(
 export async function getFollowedUsers(
   feedsClient: FeedsClient,
   userId: string,
-  limit: number = 20
+  limit: number = 20,
 ) {
   try {
     if (!feedsClient) {
