@@ -492,3 +492,33 @@ export async function unfollowUser(
     throw error;
   }
 }
+
+//Get users that the current user follows
+export async function getFollowedUsers(
+  feedsClient: FeedsClient,
+  userId: string,
+  limit: number = 20
+) {
+  try {
+    if (!feedsClient) {
+      console.error("Feeds client is not initialized");
+      return;
+    }
+    const myTimeline = feedsClient.feed("timeline", userId);
+    await myTimeline.getOrCreate();
+
+    // Filter by source - feeds that I follow
+    const response = await feedsClient.queryFollows({
+      filter: {
+        source_feed: `timeline:${userId}`,
+        // created_at: { $gte: "2000-01-01T00:00:00.00Z" },
+      },
+      limit: limit,
+    });
+    console.log("getFollowedUsers>>>", response);
+    return response;
+  } catch (error) {
+    console.error("Error getting followed users:", error);
+    throw error;
+  }
+}

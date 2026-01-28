@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentUser) {
         //Set user data to state
         const userData = {
-          id: currentUser.$id || currentUser.userId,
+          id: currentUser.$id || currentUser.userId, //should use userId as specified in the createUserAccount appwrite function
           name: currentUser.name,
           username: currentUser.username,
           email: currentUser.email,
@@ -82,6 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   //Check if user exists in Appwrite database, if user is not authenticated, redirect to sign-in page
   useEffect(() => {
     const cookieFallback = localStorage.getItem("cookieFallback");
+
+    // console.log("check user auth", checkAuthUser());
 
     console.log("🔍 Checking auth on mount. cookieFallback:", cookieFallback);
 
@@ -120,12 +122,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(
         "userdata>>",
         userData.id,
+        userData.name,
         userData.username,
         userData.imageUrl
       );
 
       await feedsClient.connectUser(
-        { id: userData.id, name: userData.username, image: userData.imageUrl },
+        { id: userData.id, name: userData.name, image: userData.imageUrl },
         tokenProvider
       );
 

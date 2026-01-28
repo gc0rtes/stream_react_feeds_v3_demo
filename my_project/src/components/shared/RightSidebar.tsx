@@ -4,7 +4,7 @@ import {
   followUser,
   unfollowUser,
 } from "@/lib/stream/api";
-import { Button } from "../ui/button";
+
 import Loader from "./Loader";
 import { useState, useEffect } from "react";
 
@@ -65,24 +65,6 @@ const RightSidebar = () => {
     }
   };
 
-  // Extract user ID from feed identifier (format: "user:userId" or just the feed ID)
-  const extractUserId = (feedId: string | undefined): string => {
-    if (!feedId) return "";
-    // Handle both "user:userId" format and just "userId" format
-    return feedId.includes(":") ? feedId.split(":")[1] : feedId;
-  };
-
-  // Extract username from feed identifier or use name
-  const extractUsername = (suggestion: any): string => {
-    if (suggestion.username) return suggestion.username;
-    const feedId = suggestion.feed || suggestion.fid || "";
-    const userId = extractUserId(feedId);
-    // Try to extract from name or use userId as fallback
-    return suggestion.name
-      ? suggestion.name.toLowerCase().replace(/\s+/g, "")
-      : userId;
-  };
-
   return (
     <aside className="hidden xl:flex px-6 py-10 flex-col min-w-[300px] bg-dark-2">
       <div className="flex flex-col gap-6">
@@ -95,43 +77,42 @@ const RightSidebar = () => {
         ) : suggestions?.suggestions && suggestions.suggestions.length > 0 ? (
           <div className="flex flex-col gap-4">
             {suggestions.suggestions.map((suggestion: any) => {
-              const feedId = suggestion.feed || suggestion.fid || "";
-              const userId = extractUserId(feedId);
-              const username = extractUsername(suggestion);
-              const isFollowed = followedUsers.has(userId);
               const isProcessing = isFollowing || isUnfollowing;
+              const targetFeedId =
+                typeof suggestion === "object"
+                  ? suggestion.created_by?.id
+                  : undefined;
 
+              const isFollowed = followedUsers.has(targetFeedId);
               return (
                 <div
-                  key={feedId || userId}
+                  key={suggestions.id}
                   className="flex items-center gap-3 p-4 bg-dark-3 rounded-lg border border-dark-4 hover:border-dark-4/80 transition"
                 >
                   <img
                     src={
-                      suggestion.image_url ||
-                      suggestion.image ||
+                      suggestion.created_by.image ||
                       "/assets/icons/profile-placeholder.svg"
                     }
-                    alt={suggestion.name || "User"}
+                    alt={suggestion.created_by.name || "User"}
                     className="h-12 w-12 rounded-full object-cover"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="body-bold truncate">
-                      {suggestion.name || "Unknown User"}
-                    </p>
-                    <p className="small-regular text-light-3 truncate">
-                      @{username}
+                      @{suggestion.created_by.name || "Unknown User"}
                     </p>
                   </div>
-                  <Button
-                    onClick={() => handleFollow(userId)}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleFollow(targetFeedId);
+                    }}
                     disabled={isProcessing}
-                    variant={isFollowed ? "outline" : "default"}
-                    size="sm"
-                    className="shrink-0"
+                    className="text-[18px] text-light-3 font-normal hover:text-light-1 transition-colors cursor-pointer"
                   >
                     {isFollowed ? "Unfollow" : "Follow"}
-                  </Button>
+                  </button>
                 </div>
               );
             })}
