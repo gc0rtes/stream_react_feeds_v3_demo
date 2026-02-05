@@ -513,6 +513,38 @@ export async function unfollowUser(
   }
 }
 
+// Add the current user as a member of a feed (e.g. forum group).
+// Call when getOrCreate fails with 403 / ReadFeed not allowed so the user can be added to the group.
+export async function addUserToFeed(
+  feedsClient: FeedsClient,
+  feedGroup: string,
+  feedId: string,
+  user_id: string,
+) {
+  try {
+    if (!feedsClient || !user_id) {
+      console.error("Feeds client or user_id is missing");
+      return;
+    }
+    const feed = feedsClient.feed(feedGroup, feedId);
+    await feed.updateFeedMembers({
+      operation: "upsert",
+      members: [
+        {
+          user_id,
+          custom: {
+            joined: new Date().toISOString().slice(0, 10),
+          },
+        },
+      ],
+    });
+    console.log("User added to feed successfully:", { feedGroup, feedId, user_id });
+  } catch (error) {
+    console.error("Error adding user to feed:", error);
+    throw error;
+  }
+}
+
 //Get users that the current user follows
 export async function getFollowedUsers(
   feedsClient: FeedsClient,

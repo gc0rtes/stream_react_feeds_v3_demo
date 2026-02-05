@@ -13,13 +13,17 @@ export function useFeed(
 ) {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [feedError, setFeedError] = useState<unknown>(null);
+  const [refetchCount, setRefetchCount] = useState(0);
 
   useEffect(() => {
     if (!feedsClient || !feedId || !enabled) {
       setFeed(null);
+      setFeedError(null);
       return;
     }
 
+    setFeedError(null);
     setIsInitializing(true);
     const feedInstance = feedsClient.feed(feedGroup, feedId);
 
@@ -27,15 +31,20 @@ export function useFeed(
       .getOrCreate({ watch: true })
       .then(() => {
         setFeed(feedInstance);
+        setFeedError(null);
         setIsInitializing(false);
       })
       .catch((error) => {
         console.error("Error initializing feed:", error);
+        setFeedError(error);
+        setFeed(null);
         setIsInitializing(false);
       });
-  }, [feedsClient, feedGroup, feedId, enabled]);
+  }, [feedsClient, feedGroup, feedId, enabled, refetchCount]);
 
-  return { feed, isInitializing };
+  const refetchFeed = () => setRefetchCount((c) => c + 1);
+
+  return { feed, isInitializing, feedError, refetchFeed };
 }
 
 /**
@@ -47,7 +56,7 @@ export function useFeedActivitiesWithProvider(
   feedId: string | undefined,
   enabled: boolean = true
 ) {
-  const { feed, isInitializing } = useFeed(
+  const { feed, isInitializing, feedError, refetchFeed } = useFeed(
     feedsClient,
     feedGroup,
     feedId,
@@ -59,6 +68,8 @@ export function useFeedActivitiesWithProvider(
     ...feedActivities,
     isInitializing,
     feed,
+    feedError,
+    refetchFeed,
   };
 }
 
