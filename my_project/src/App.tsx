@@ -14,6 +14,7 @@ import {
   PostDetails,
   Profile,
   UpdateProfile,
+  Forums,
 } from "./_root/pages";
 
 import { Toaster } from "./components/ui/sonner";
@@ -34,6 +35,7 @@ const App = () => {
         <Route element={<RootLayout />}>
           <Route index element={<Home />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/forums" element={<Forums />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/all-users" element={<AllUsers />} />
           <Route path="/saved" element={<Saved />} />

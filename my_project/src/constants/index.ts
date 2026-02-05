@@ -10,6 +10,11 @@ export const sidebarLinks = [
     label: "Community",
   },
   {
+    imgURL: "/assets/icons/forums.svg",
+    route: "/forums",
+    label: "Forums",
+  },
+  {
     imgURL: "/assets/icons/wallpaper.svg",
     route: "/explore",
     label: "Explore",
@@ -41,6 +46,11 @@ export const bottombarLinks = [
     imgURL: "/assets/icons/community.svg",
     route: "/community",
     label: "Community",
+  },
+  {
+    imgURL: "/assets/icons/forums.svg",
+    route: "/forums",
+    label: "Forums",
   },
   {
     imgURL: "/assets/icons/wallpaper.svg",
