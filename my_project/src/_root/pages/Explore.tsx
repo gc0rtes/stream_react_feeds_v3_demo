@@ -1,7 +1,13 @@
 import GridPostList from "@/components/shared/GridPostList";
 import SearchResults from "@/components/shared/SearchResults";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { useUserContext } from "@/context/AuthContext";
 import { getSearchPosts } from "@/lib/stream/api";
 import Loader from "@/components/shared/Loader";
@@ -11,10 +17,26 @@ import {
 } from "@/lib/stream/hooks";
 import { FeedLoadMoreFooter } from "@/components/shared/FeedLoadMoreFooter";
 import useDebounce from "@/hooks/useDebounce";
-import type { QueryActivitiesResponse } from "@stream-io/feeds-client";
+import type {
+  ActivityResponse,
+  QueryActivitiesResponse,
+} from "@stream-io/feeds-client";
+
+function formatTopicLabel(tag: string) {
+  return tag
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 const Explore = () => {
   const [searchValue, setSearchValue] = useState("");
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+  const [topicOptions, setTopicOptions] = useState<string[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+
+  const filterContainerRef = useRef<HTMLDivElement>(null);
+  const initialPageLengthRef = useRef<number | null>(null);
+  const extractedTopicsRef = useRef(false);
 
   const debouncedSearchValue = useDebounce(searchValue, 800);
 
@@ -60,6 +82,67 @@ const Explore = () => {
     isConnected && !!user_id,
   );
 
+  useEffect(() => {
+    if (isInitializing) {
+      initialPageLengthRef.current = null;
+      extractedTopicsRef.current = false;
+      setTopicOptions([]);
+      setSelectedTopic(null);
+      setFilterMenuOpen(false);
+      return;
+    }
+    if (initialPageLengthRef.current === null) {
+      initialPageLengthRef.current = activities?.length ?? 0;
+    }
+  }, [isInitializing, activities]);
+
+  useEffect(() => {
+    if (isInitializing || extractedTopicsRef.current || !activities?.length) {
+      return;
+    }
+
+    let pageLen = initialPageLengthRef.current ?? 0;
+    if (pageLen === 0) {
+      pageLen = activities.length;
+      initialPageLengthRef.current = pageLen;
+    }
+
+    extractedTopicsRef.current = true;
+    const firstPage = activities.slice(0, pageLen);
+    const tags = new Set<string>();
+    for (const a of firstPage) {
+      const arr = (a as ActivityResponse).interest_tags;
+      if (!Array.isArray(arr)) continue;
+      for (const t of arr) {
+        if (typeof t === "string" && t.trim()) tags.add(t.trim());
+      }
+    }
+    setTopicOptions([...tags].sort((x, y) => x.localeCompare(y)));
+  }, [isInitializing, activities]);
+
+  useEffect(() => {
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      const el = filterContainerRef.current;
+      if (!el || !filterMenuOpen) return;
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setFilterMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
+  }, [filterMenuOpen]);
+
+  const filteredActivities = useMemo(() => {
+    if (!activities?.length || !selectedTopic) return activities;
+    return activities.filter((a) =>
+      (a as ActivityResponse).interest_tags?.includes(selectedTopic),
+    );
+  }, [activities, selectedTopic]);
+
   const isLoadingPosts = isInitializing || (is_loading && !activities?.length);
 
   const shouldShowSearchResults = searchValue.trim() !== "";
@@ -69,6 +152,8 @@ const Explore = () => {
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
+
+  const showTopicFilter = !shouldShowSearchResults;
 
   return (
     <div className="flex flex-col flex-1 items-center overflow-scroll py-10 px-5 md:p-14 custom-scrollbar">
@@ -92,15 +177,70 @@ const Explore = () => {
       </div>
       <div className="flex-between w-full max-w-5xl mt-16 mb-7 ">
         <h3 className="body-bold md:h3-bold text-left w-full">Popular Today</h3>
-        <div className="flex-center gap-3 bg-dark-3 rounded-xl px-4 py-2 cursor-pointer">
-          <p className="small-medium md:base-medium text-light-2">All</p>
-          <img
-            src="/assets/icons/filter.svg"
-            width={20}
-            height={20}
-            alt="filter"
-          />
-        </div>
+        {showTopicFilter ? (
+          <div className="relative shrink-0" ref={filterContainerRef}>
+            <button
+              type="button"
+              className="flex-center gap-3 rounded-xl bg-dark-3 px-4 py-2 text-light-2 hover:bg-dark-4/80"
+              onClick={() => setFilterMenuOpen((o) => !o)}
+              aria-expanded={filterMenuOpen}
+              aria-haspopup="listbox"
+            >
+              <p className="small-medium md:base-medium">
+                {selectedTopic ? formatTopicLabel(selectedTopic) : "All"}
+              </p>
+              <img
+                src="/assets/icons/filter.svg"
+                width={20}
+                height={20}
+                alt=""
+              />
+            </button>
+            {filterMenuOpen && (
+              <ul
+                className="absolute right-0 top-full z-30 mt-2 min-w-[200px] max-h-64 overflow-y-auto rounded-lg border border-dark-4 bg-dark-3 py-1 shadow-lg"
+                role="listbox"
+              >
+                <li>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selectedTopic === null}
+                    className="w-full px-4 py-2.5 text-left text-sm text-light-2 hover:bg-dark-4"
+                    onClick={() => {
+                      setSelectedTopic(null);
+                      setFilterMenuOpen(false);
+                    }}
+                  >
+                    All
+                  </button>
+                </li>
+                {topicOptions.length === 0 ? (
+                  <li className="px-4 py-2.5 text-sm text-light-4">
+                    No topics on first page
+                  </li>
+                ) : (
+                  topicOptions.map((topic) => (
+                    <li key={topic}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={selectedTopic === topic}
+                        className="w-full px-4 py-2.5 text-left text-sm text-light-2 hover:bg-dark-4"
+                        onClick={() => {
+                          setSelectedTopic(topic);
+                          setFilterMenuOpen(false);
+                        }}
+                      >
+                        {formatTopicLabel(topic)}
+                      </button>
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
+          </div>
+        ) : null}
       </div>
       <FeedProviderWrapper feed={feed}>
         <div className="flex flex-wrap gap-9 w-full max-w-5xl">
@@ -117,8 +257,14 @@ const Explore = () => {
             <p className="text-light-4 mt-10 text-center w-full">
               End of posts
             </p>
+          ) : filteredActivities && filteredActivities.length === 0 ? (
+            <p className="text-light-4 mt-10 text-center w-full">
+              No posts with this topic. Try another or choose All.
+            </p>
           ) : (
-            activities && <GridPostList posts={activities} />
+            filteredActivities && (
+              <GridPostList posts={filteredActivities} />
+            )
           )}
         </div>
         {!shouldShowSearchResults && (
