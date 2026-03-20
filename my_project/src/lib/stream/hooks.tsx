@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
-import type { Feed, FeedsClient } from "@stream-io/feeds-client";
+import { useEffect, useMemo, useState } from "react";
+import type {
+  Feed,
+  FeedsClient,
+  GetOrCreateFeedRequest,
+} from "@stream-io/feeds-client";
 import { useFeedActivities, StreamFeed } from "@stream-io/feeds-react-sdk";
 
 /**
@@ -9,12 +13,19 @@ export function useFeed(
   feedsClient: FeedsClient | null,
   feedGroup: string,
   feedId: string | undefined,
-  enabled: boolean = true
+  enabled: boolean = true,
+  /** Merged into `getOrCreate` (e.g. `interest_weights` for timeline). Omit for default `{ watch: true }` only. */
+  getOrCreateOptions?: Partial<GetOrCreateFeedRequest>
 ) {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [feedError, setFeedError] = useState<unknown>(null);
   const [refetchCount, setRefetchCount] = useState(0);
+
+  const getOrCreateOptionsKey = useMemo(
+    () => JSON.stringify(getOrCreateOptions ?? null),
+    [getOrCreateOptions],
+  );
 
   useEffect(() => {
     if (!feedsClient || !feedId || !enabled) {
@@ -28,7 +39,7 @@ export function useFeed(
     const feedInstance = feedsClient.feed(feedGroup, feedId);
 
     feedInstance
-      .getOrCreate({ watch: true })
+      .getOrCreate({ ...getOrCreateOptions, watch: true })
       .then(() => {
         setFeed(feedInstance);
         setFeedError(null);
@@ -40,7 +51,16 @@ export function useFeed(
         setFeed(null);
         setIsInitializing(false);
       });
-  }, [feedsClient, feedGroup, feedId, enabled, refetchCount]);
+    // getOrCreateOptions compared via getOrCreateOptionsKey (JSON) for stable effect runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    feedsClient,
+    feedGroup,
+    feedId,
+    enabled,
+    refetchCount,
+    getOrCreateOptionsKey,
+  ]);
 
   const refetchFeed = () => setRefetchCount((c) => c + 1);
 
@@ -54,13 +74,15 @@ export function useFeedActivitiesWithProvider(
   feedsClient: FeedsClient | null,
   feedGroup: string,
   feedId: string | undefined,
-  enabled: boolean = true
+  enabled: boolean = true,
+  getOrCreateOptions?: Partial<GetOrCreateFeedRequest>
 ) {
   const { feed, isInitializing, feedError, refetchFeed } = useFeed(
     feedsClient,
     feedGroup,
     feedId,
-    enabled
+    enabled,
+    getOrCreateOptions
   );
   const feedActivities = useFeedActivities(feed ?? undefined);
 
