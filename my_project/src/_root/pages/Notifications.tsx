@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type {
   ActivityResponse,
@@ -85,6 +85,18 @@ function ReadStateBadge({ isRead }: { isRead: boolean }) {
       Unread
     </span>
   );
+}
+
+/** Newest groups first; stable when Stream reorders after mark_read. */
+function sortAggregatedByNewestFirst(
+  items: AggregatedActivityResponse[],
+): AggregatedActivityResponse[] {
+  return [...items].sort((a, b) => {
+    const tb = b.updated_at.getTime();
+    const ta = a.updated_at.getTime();
+    if (tb !== ta) return tb - ta;
+    return a.group.localeCompare(b.group);
+  });
 }
 
 function getNotificationActivityPath(activity: ActivityResponse): string {
@@ -259,6 +271,11 @@ function NotificationFeedList({
     [feed],
   );
 
+  const items = useMemo(() => {
+    const raw = data?.aggregated_activities ?? [];
+    return sortAggregatedByNewestFirst(raw);
+  }, [data?.aggregated_activities]);
+
   if (feedError) {
     return (
       <p className="base-regular mt-6 text-center text-red-500">
@@ -274,8 +291,6 @@ function NotificationFeedList({
       </div>
     );
   }
-
-  const items = data?.aggregated_activities ?? [];
 
   if (items.length === 0) {
     return (
