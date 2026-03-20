@@ -7,6 +7,7 @@ import {
   useFeedActivitiesWithProvider,
   FeedProviderWrapper,
 } from "@/lib/stream/hooks";
+import { FeedLoadMoreFooter } from "@/components/shared/FeedLoadMoreFooter";
 import { addUserToFeed } from "@/lib/stream/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,19 +40,27 @@ const Forums = () => {
   const forumCategory = selectedCategory ?? undefined;
   const feedEnabled = isConnected && !!user_id && !!forumCategory;
 
-  const { activities, is_loading, isInitializing, feed, feedError, refetchFeed } =
-    useFeedActivitiesWithProvider(
-      feedsClient,
-      "forums",
-      forumCategory,
-      feedEnabled,
-    );
+  const {
+    activities,
+    is_loading,
+    isInitializing,
+    feed,
+    feedError,
+    refetchFeed,
+    loadNextPage,
+    has_next_page,
+  } = useFeedActivitiesWithProvider(
+    feedsClient,
+    "forums",
+    forumCategory,
+    feedEnabled,
+  );
 
   const [membershipError, setMembershipError] = useState<string | null>(null);
   const [membershipLoading, setMembershipLoading] = useState(false);
   const [membershipAttempted, setMembershipAttempted] = useState(false);
 
-  const isLoading = isInitializing || is_loading;
+  const isLoadingInitial = isInitializing || (is_loading && !activities?.length);
 
   // Reset membership state when switching forum category
   useEffect(() => {
@@ -244,22 +253,34 @@ const Forums = () => {
                       {membershipAttempted ? "Loading forum…" : "Requesting access…"}
                     </p>
                   </div>
-                ) : isLoading && !activities ? (
+                ) : isLoadingInitial && !activities ? (
                   <div className="flex-center items-center justify-center w-full h-full">
                     <Loader />
                   </div>
                 ) : (
-                  <ul className="flex flex-col gap-9 w-full">
-                    {activities?.length ? (
-                      activities.map((activity) => (
-                        <PostCard key={activity.id} post={activity} />
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-sm py-4">
-                        No posts in this forum yet.
-                      </p>
-                    )}
-                  </ul>
+                  <>
+                    <ul className="flex flex-col gap-9 w-full">
+                      {activities?.length ? (
+                        activities.map((activity) => (
+                          <PostCard key={activity.id} post={activity} />
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-sm py-4">
+                          No posts in this forum yet.
+                        </p>
+                      )}
+                    </ul>
+                    <FeedLoadMoreFooter
+                      visible={Boolean(
+                        activities &&
+                          activities.length > 0 &&
+                          !isInitializing,
+                      )}
+                      hasNextPage={has_next_page}
+                      isLoading={is_loading}
+                      onLoadMore={loadNextPage}
+                    />
+                  </>
                 )}
               </>
             )}
