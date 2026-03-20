@@ -1,19 +1,12 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Feed } from "@stream-io/feeds-client";
+import { useNotificationStatus } from "@stream-io/feeds-react-sdk";
 import { useUserContext } from "@/context/AuthContext";
 import { useFeed } from "@/lib/stream/hooks";
 
 type NotificationBadgeContextValue = {
+  /** True when the notification feed reports unread items (initial load + realtime updates). */
   hasUnread: boolean;
-  clearUnread: () => void;
   notificationFeed: Feed | null;
   notificationFeedInitializing: boolean;
   notificationFeedError: unknown;
@@ -39,44 +32,17 @@ export function NotificationFeedProvider({ children }: { children: ReactNode }) 
     enabled,
   );
 
-  const [hasUnread, setHasUnread] = useState(false);
-
-  useEffect(() => {
-    if (!feedsClient) return;
-
-    const onNotificationFeedUpdated = () => {
-      setHasUnread(true);
-    };
-
-    feedsClient.on("feeds.notification_feed.updated", onNotificationFeedUpdated);
-
-    return () => {
-      feedsClient.off(
-        "feeds.notification_feed.updated",
-        onNotificationFeedUpdated,
-      );
-    };
-  }, [feedsClient]);
-
-  const clearUnread = useCallback(() => {
-    setHasUnread(false);
-  }, []);
+  const { unread = 0 } = useNotificationStatus(notificationFeed ?? undefined) ?? {};
+  const hasUnread = unread > 0;
 
   const value = useMemo(
     () => ({
       hasUnread,
-      clearUnread,
       notificationFeed,
       notificationFeedInitializing,
       notificationFeedError,
     }),
-    [
-      hasUnread,
-      clearUnread,
-      notificationFeed,
-      notificationFeedInitializing,
-      notificationFeedError,
-    ],
+    [hasUnread, notificationFeed, notificationFeedInitializing, notificationFeedError],
   );
 
   return (
@@ -91,7 +57,6 @@ export function useNotificationBadge() {
   return (
     ctx ?? {
       hasUnread: false,
-      clearUnread: () => {},
       notificationFeed: null,
       notificationFeedInitializing: false,
       notificationFeedError: null,
