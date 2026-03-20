@@ -351,8 +351,8 @@ export async function addLike(feedsClient: FeedsClient, activity_id: string) {
     const addResponse = await feedsClient.addActivityReaction({
       activity_id: activity_id,
       type: "like",
-      // Optionally override existing reaction
       enforce_unique: true,
+      create_notification_activity: true,
     });
     console.log("addResponse>>>", addResponse);
   } catch (error) {
@@ -482,7 +482,9 @@ export async function followUser(
     }
     const timeline = feedsClient.feed(sourceFeedGroup, sourceFeedId);
     await timeline.getOrCreate();
-    const followResponse = await timeline.follow(`user:${targetFeedId}`);
+    const followResponse = await timeline.follow(`user:${targetFeedId}`, {
+      create_notification_activity: true,
+    });
     console.log("followResponse>>>", followResponse);
     return followResponse;
   } catch (error) {

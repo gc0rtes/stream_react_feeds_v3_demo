@@ -9,6 +9,8 @@ import { Loader } from "lucide-react";
 import { sidebarLinks } from "@/constants";
 import type { INavLink } from "@/types";
 import { closeWSFeedsConnection } from "@/lib/stream/api";
+import { useNotificationBadge } from "@/context/NotificationBadgeContext";
+import { NotificationBellIcon } from "@/components/shared/NotificationBellIcon";
 
 const LeftSidebar = () => {
   const {
@@ -20,6 +22,7 @@ const LeftSidebar = () => {
     setClient,
     setIsConnected,
   } = useUserContext();
+  const { hasUnread } = useNotificationBadge();
   const { pathname } = useLocation();
   const { mutate: signOut } = useSignOutAccount();
   const navigate = useNavigate();
@@ -71,6 +74,7 @@ const LeftSidebar = () => {
         <ul className="flex flex-col gap-6 ">
           {sidebarLinks.map((link: INavLink) => {
             const isActive = pathname === link.route;
+            const isNotifications = link.route === "/notifications";
 
             return (
               <li
@@ -83,13 +87,22 @@ const LeftSidebar = () => {
                   to={link.route}
                   className="flex gap-4 items-center p-4"
                 >
-                  <img
-                    src={link.imgURL}
-                    alt={link.label}
-                    className={`group-hover:invert-white ${
-                      isActive && "invert-white"
-                    }`}
-                  />
+                  {isNotifications ? (
+                    <NotificationBellIcon
+                      showBadge={hasUnread}
+                      iconClassName={
+                        isActive ? "text-white" : undefined
+                      }
+                    />
+                  ) : (
+                    <img
+                      src={link.imgURL}
+                      alt={link.label}
+                      className={`group-hover:invert-white ${
+                        isActive && "invert-white"
+                      }`}
+                    />
+                  )}
                   {link.label}
                 </NavLink>
               </li>

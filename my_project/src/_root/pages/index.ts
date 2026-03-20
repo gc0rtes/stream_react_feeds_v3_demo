@@ -9,3 +9,4 @@ export { default as PostDetails } from "./PostDetails";
 export { default as Profile } from "./Profile";
 export { default as UpdateProfile } from "./UpdateProfile";
 export { default as Forums } from "./Forums";
+export { default as Notifications } from "./Notifications";

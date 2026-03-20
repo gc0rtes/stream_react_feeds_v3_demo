@@ -4,6 +4,7 @@ import Topbar from "@/components/shared/Topbar";
 import { Outlet } from "react-router-dom";
 import { StreamFeeds } from "@stream-io/feeds-react-sdk";
 import { useUserContext } from "@/context/AuthContext";
+import { NotificationFeedProvider } from "@/context/NotificationBadgeContext";
 
 const RootLayout = () => {
   const { feedsClient } = useUserContext();
@@ -20,11 +21,13 @@ const RootLayout = () => {
     </div>
   );
 
-  if (!feedsClient) {
-    return content;
-  }
-
-  return <StreamFeeds client={feedsClient}>{content}</StreamFeeds>;
+  return (
+    <NotificationFeedProvider>
+      {!feedsClient ? content : (
+        <StreamFeeds client={feedsClient}>{content}</StreamFeeds>
+      )}
+    </NotificationFeedProvider>
+  );
 };
 
 export default RootLayout;

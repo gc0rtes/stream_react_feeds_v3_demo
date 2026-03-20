@@ -30,6 +30,11 @@ export const sidebarLinks = [
     label: "Saved",
   },
   {
+    imgURL: "/assets/icons/chat.svg",
+    route: "/notifications",
+    label: "Notifications",
+  },
+  {
     imgURL: "/assets/icons/gallery-add.svg",
     route: "/create-post",
     label: "Create Post",
@@ -66,6 +71,11 @@ export const bottombarLinks = [
     imgURL: "/assets/icons/bookmark.svg",
     route: "/saved",
     label: "Saved",
+  },
+  {
+    imgURL: "/assets/icons/chat.svg",
+    route: "/notifications",
+    label: "Alerts",
   },
   {
     imgURL: "/assets/icons/gallery-add.svg",
